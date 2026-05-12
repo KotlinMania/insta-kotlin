@@ -101,7 +101,7 @@ sponsor](https://github.com/sponsors/mitsuhiko).
 
 ```kotlin
 dependencies {
-    implementation("io.github.kotlinmania:insta-kotlin:0.1.0-SNAPSHOT")
+    implementation("io.github.kotlinmania:insta-kotlin:0.1.0")
 }
 ```
 
