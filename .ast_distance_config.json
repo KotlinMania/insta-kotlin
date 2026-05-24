@@ -1,5 +1,5 @@
 {
-  "type": "port",
+  "parity_mode": false,
   "name": "insta-kotlin",
   "source": {
     "path": "tmp/insta/src",
@@ -16,7 +16,7 @@
     "lint": true
   },
   "reexport_modules": [
-    "mod.rs",
+    "content/yaml/vendored/mod.rs",
     "lib.rs"
   ]
 }
