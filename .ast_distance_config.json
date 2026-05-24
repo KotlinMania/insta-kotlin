@@ -1,5 +1,4 @@
 {
-  "parity_mode": false,
   "name": "insta-kotlin",
   "source": {
     "path": "tmp/insta/src",
