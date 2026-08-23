@@ -426,9 +426,7 @@ kotlin {
     mingwX64 { configureBenchmarkCompilation() }
 
     // Android NDK — always built (full target surface, no opt-in gate).
-    androidNativeArm32 { configureBenchmarkCompilation() }
     androidNativeArm64 { configureBenchmarkCompilation() }
-    androidNativeX86 { configureBenchmarkCompilation() }
     androidNativeX64 { configureBenchmarkCompilation() }
 
     // Web
@@ -822,10 +820,8 @@ tasks.register("swiftExportSmokeTest") {
 // ============================================================================
 val nativeTargetNames =
     listOf(
-        "androidNativeArm32",
         "androidNativeArm64",
         "androidNativeX64",
-        "androidNativeX86",
         "iosArm64",
         "iosSimulatorArm64",
         "iosX64",
