@@ -72,13 +72,13 @@ class ContentTest {
                 listOf(
                     Content.from("a"),
                     Content.Some(Content.from("b")),
-                    Content.Struct("User", listOf("name" to Content.from("c"))),
+                    Content.Struct("User", listOf(Content.Field("name", Content.from("c")))),
                 ),
             )
 
         val collected = mutableListOf<String>()
         content.walk { node ->
-            if (node is Content.String) {
+            if (node is Content.Str) {
                 collected.add(node.value)
             }
             true

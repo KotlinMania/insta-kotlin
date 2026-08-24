@@ -205,7 +205,7 @@ sealed class Content {
         val value: kotlin.Char,
     ) : Content()
 
-    data class String(
+    data class Str(
         val value: kotlin.String,
     ) : Content()
 
@@ -263,20 +263,30 @@ sealed class Content {
         val value: List<Content>,
     ) : Content()
 
+    data class Entry(
+        val key: Content,
+        val value: Content,
+    )
+
+    data class Field(
+        val name: kotlin.String,
+        val value: Content,
+    )
+
     data class Map(
-        val value: List<Pair<Content, Content>>,
+        val value: List<Entry>,
     ) : Content()
 
     data class Struct(
         val name: kotlin.String,
-        val fields: List<Pair<kotlin.String, Content>>,
+        val fields: List<Field>,
     ) : Content()
 
     data class StructVariant(
         val name: kotlin.String,
         val index: UInt,
         val variant: kotlin.String,
-        val fields: List<Pair<kotlin.String, Content>>,
+        val fields: List<Field>,
     ) : Content()
 
     /** This resolves the innermost content in a chain of wrapped content. */
@@ -291,7 +301,7 @@ sealed class Content {
     /** Returns the value as string. */
     fun asString(): kotlin.String? =
         when (val inner = resolveInner()) {
-            is String -> inner.value
+            is Str -> inner.value
             else -> null
         }
 
@@ -348,40 +358,61 @@ sealed class Content {
     /** Returns the value as unsigned 128-bit integer. */
     fun asUInt128(): UInt128? =
         when (val inner = resolveInner()) {
+            is U8 -> UInt128.from(inner.value.toULong())
+            is U16 -> UInt128.from(inner.value.toULong())
+            is U32 -> UInt128.from(inner.value.toULong())
+            is U64 -> UInt128.from(inner.value)
             is U128 -> inner.value
+            is I8 -> inner.value.takeIf { it >= 0 }?.let { UInt128.from(it.toULong()) }
+            is I16 -> inner.value.takeIf { it >= 0 }?.let { UInt128.from(it.toULong()) }
+            is I32 -> inner.value.takeIf { it >= 0 }?.let { UInt128.from(it.toULong()) }
+            is I64 -> inner.value.takeIf { it >= 0 }?.let { UInt128.from(it.toULong()) }
             is I128 -> inner.value.toUInt128OrNull()
-            else -> asULong()?.let(UInt128::from)
+            else -> null
         }
 
     /** Returns the value as signed 64-bit integer. */
     fun asLong(): Long? =
         when (val inner = resolveInner()) {
-            is U8 -> inner.value.toLong()
-            is U16 -> inner.value.toLong()
-            is U32 -> inner.value.toLong()
-            is U64 -> inner.value.toLong().takeIf { it.toULong() == inner.value }
-            is U128 ->
-                inner.value
-                    .toULongOrNull()
-                    ?.toLong()
-                    ?.takeIf { it >= 0 }
             is I8 -> inner.value.toLong()
             is I16 -> inner.value.toLong()
             is I32 -> inner.value.toLong()
             is I64 -> inner.value
             is I128 -> inner.value.toLongOrNull()
+            is U8 -> inner.value.toLong()
+            is U16 -> inner.value.toLong()
+            is U32 -> inner.value.toLong()
+            is U64 ->
+                if (inner.value <= Long.MAX_VALUE.toULong()) {
+                    inner.value.toLong()
+                } else {
+                    null
+                }
+            is U128 ->
+                inner.value
+                    .toULongOrNull()
+                    ?.takeIf { it <= Long.MAX_VALUE.toULong() }
+                    ?.toLong()
             else -> null
         }
 
     /** Returns the value as signed 128-bit integer. */
     fun asInt128(): Int128? =
         when (val inner = resolveInner()) {
-            is U128 -> Int128.parse(inner.value.decimal)
+            is I8 -> Int128.from(inner.value.toLong())
+            is I16 -> Int128.from(inner.value.toLong())
+            is I32 -> Int128.from(inner.value.toLong())
+            is I64 -> Int128.from(inner.value)
             is I128 -> inner.value
-            else -> asLong()?.let(Int128::from)
+            is U8 -> Int128.from(inner.value.toLong())
+            is U16 -> Int128.from(inner.value.toLong())
+            is U32 -> Int128.from(inner.value.toLong())
+            is U64 -> Int128.parse(inner.value.toString())
+            is U128 -> Int128.parse(inner.value.decimal)
+            else -> null
         }
 
-    /** Returns the value as 64-bit floating-point number. */
+    /** Returns the value as 64-bit float. */
     fun asDouble(): Double? =
         when (val inner = resolveInner()) {
             is F32 -> inner.value.toDouble()
@@ -389,11 +420,7 @@ sealed class Content {
             else -> null
         }
 
-    /**
-     * Recursively walks the content structure.
-     *
-     * The callback is invoked for every content value in the tree.
-     */
+    /** Walks recursively through the content tree. */
     fun walk(visit: (Content) -> Boolean) {
         if (!visit(this)) {
             return
@@ -405,12 +432,12 @@ sealed class Content {
             is NewtypeVariant -> value.walk(visit)
             is Seq -> value.forEach { it.walk(visit) }
             is Map ->
-                value.forEach { (key, mapValue) ->
-                    key.walk(visit)
-                    mapValue.walk(visit)
+                value.forEach { entry ->
+                    entry.key.walk(visit)
+                    entry.value.walk(visit)
                 }
-            is Struct -> fields.forEach { (_, fieldValue) -> fieldValue.walk(visit) }
-            is StructVariant -> fields.forEach { (_, fieldValue) -> fieldValue.walk(visit) }
+            is Struct -> fields.forEach { field -> field.value.walk(visit) }
+            is StructVariant -> fields.forEach { field -> field.value.walk(visit) }
             is Tuple -> value.forEach { it.walk(visit) }
             is TupleStruct -> value.forEach { it.walk(visit) }
             is TupleVariant -> value.forEach { it.walk(visit) }
@@ -428,7 +455,7 @@ sealed class Content {
             is F32,
             is F64,
             is Char,
-            is String,
+            is Str,
             is Bytes,
             None,
             UnitValue,
@@ -465,9 +492,9 @@ sealed class Content {
 
         fun from(value: Double): Content = F64(value)
 
-        fun from(value: kotlin.Char): Content = Char(value)
+        fun fromChar(value: kotlin.Char): Content = Char(value)
 
-        fun from(value: kotlin.String): Content = String(value)
+        fun from(value: kotlin.String): Content = Str(value)
 
         fun from(value: ByteArray): Content = Bytes(value.map { it.toUByte() })
 
