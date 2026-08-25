@@ -29,6 +29,8 @@ sealed class Error {
         val path: kotlin.String,
     ) : Error()
 
+    fun fmt(): kotlin.String = toString()
+
     override fun toString(): kotlin.String =
         when (this) {
             is FailedParsingYaml -> "Failed parsing the YAML from $path"
@@ -298,12 +300,18 @@ sealed class Content {
             else -> this
         }
 
+    /** This resolves the innermost content in a chain of wrapped content. */
+    fun resolveInnerMut(): Content = resolveInner()
+
     /** Returns the value as string. */
     fun asString(): kotlin.String? =
         when (val inner = resolveInner()) {
             is Str -> inner.value
             else -> null
         }
+
+    /** Returns the value as string. */
+    fun asStr(): kotlin.String? = asString()
 
     /** Returns the value as bytes. */
     fun asBytes(): List<UByte>? =
@@ -355,6 +363,9 @@ sealed class Content {
             else -> null
         }
 
+    /** Returns the value as unsigned 64-bit integer. */
+    fun asU64(): ULong? = asULong()
+
     /** Returns the value as unsigned 128-bit integer. */
     fun asUInt128(): UInt128? =
         when (val inner = resolveInner()) {
@@ -370,6 +381,9 @@ sealed class Content {
             is I128 -> inner.value.toUInt128OrNull()
             else -> null
         }
+
+    /** Returns the value as unsigned 128-bit integer. */
+    fun asU128(): UInt128? = asUInt128()
 
     /** Returns the value as signed 64-bit integer. */
     fun asLong(): Long? =
@@ -396,6 +410,9 @@ sealed class Content {
             else -> null
         }
 
+    /** Returns the value as signed 64-bit integer. */
+    fun asI64(): Long? = asLong()
+
     /** Returns the value as signed 128-bit integer. */
     fun asInt128(): Int128? =
         when (val inner = resolveInner()) {
@@ -412,6 +429,9 @@ sealed class Content {
             else -> null
         }
 
+    /** Returns the value as signed 128-bit integer. */
+    fun asI128(): Int128? = asInt128()
+
     /** Returns the value as 64-bit float. */
     fun asDouble(): Double? =
         when (val inner = resolveInner()) {
@@ -419,6 +439,9 @@ sealed class Content {
             is F64 -> inner.value
             else -> null
         }
+
+    /** Returns the value as 64-bit float. */
+    fun asF64(): Double? = asDouble()
 
     /** Walks recursively through the content tree. */
     fun walk(visit: (Content) -> Boolean) {
