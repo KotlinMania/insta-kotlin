@@ -1,4 +1,4 @@
-// port-lint: source insta/src/content/mod.rs
+// port-lint: source content/mod.rs
 package io.github.kotlinmania.insta.content
 
 private const val LONG_MAX_DECIMAL = "9223372036854775807"
