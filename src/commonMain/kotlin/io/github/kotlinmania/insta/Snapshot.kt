@@ -1,4 +1,4 @@
-// port-lint: source snapshot.rs
+// port-lint: source insta/src/snapshot.rs
 package io.github.kotlinmania.insta
 
 import io.github.kotlinmania.insta.content.Content

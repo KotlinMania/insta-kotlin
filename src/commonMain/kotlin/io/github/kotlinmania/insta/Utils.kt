@@ -1,4 +1,4 @@
-// port-lint: source utils.rs
+// port-lint: source insta/src/utils.rs
 package io.github.kotlinmania.insta
 
 class FakeStyledObject<D>(val value: D) {
