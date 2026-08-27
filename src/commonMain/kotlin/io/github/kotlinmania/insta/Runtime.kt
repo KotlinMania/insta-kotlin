@@ -2,7 +2,6 @@
 package io.github.kotlinmania.insta
 
 import io.github.kotlinmania.insta.content.Content
-import io.github.kotlinmania.insta.content.toString as jsonToString
 import io.github.kotlinmania.insta.content.toStringCompact as jsonToStringCompact
 import io.github.kotlinmania.insta.content.toStringPretty as jsonToStringPretty
 

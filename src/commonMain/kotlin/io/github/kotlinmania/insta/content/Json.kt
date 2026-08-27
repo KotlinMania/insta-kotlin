@@ -245,19 +245,20 @@ private const val QU: Byte = '"'.code.toByte() // \x22
 private const val BS: Byte = '\\'.code.toByte() // \x5C
 private const val U: Byte = 'u'.code.toByte() // \x00...\x1F control characters
 
-private val ESCAPE: IntArray = IntArray(256) { idx ->
-    when (idx) {
-        0x08 -> BB.toInt()
-        0x09 -> TT.toInt()
-        0x0A -> NN.toInt()
-        0x0C -> FF.toInt()
-        0x0D -> RR.toInt()
-        0x22 -> QU.toInt()
-        0x5C -> BS.toInt()
-        in 0x00..0x1F -> U.toInt()
-        else -> 0
+private val ESCAPE: IntArray =
+    IntArray(256) { idx ->
+        when (idx) {
+            0x08 -> BB.toInt()
+            0x09 -> TT.toInt()
+            0x0A -> NN.toInt()
+            0x0C -> FF.toInt()
+            0x0D -> RR.toInt()
+            0x22 -> QU.toInt()
+            0x5C -> BS.toInt()
+            in 0x00..0x1F -> U.toInt()
+            else -> 0
+        }
     }
-}
 
 /**
  * Serializes a value to JSON.

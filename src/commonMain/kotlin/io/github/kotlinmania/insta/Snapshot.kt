@@ -6,7 +6,10 @@ import io.github.kotlinmania.insta.content.toString as jsonToString
 
 sealed class SnapshotKind {
     data object Text : SnapshotKind()
-    data class Binary(val extension: kotlin.String) : SnapshotKind()
+
+    data class Binary(
+        val extension: kotlin.String,
+    ) : SnapshotKind()
 }
 
 /**
@@ -115,8 +118,13 @@ data class TextSnapshotContents(
 }
 
 sealed class SnapshotContents {
-    data class Text(val value: TextSnapshotContents) : SnapshotContents()
-    data class Binary(val value: List<UByte>) : SnapshotContents()
+    data class Text(
+        val value: TextSnapshotContents,
+    ) : SnapshotContents()
+
+    data class Binary(
+        val value: List<UByte>,
+    ) : SnapshotContents()
 
     fun isBinary(): Boolean = this is Binary
 
