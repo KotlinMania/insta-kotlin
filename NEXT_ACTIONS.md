@@ -4,10 +4,10 @@ Based on AST analysis, here are the concrete next steps.
 
 ## Summary
 
-- **Files Present:** 10/22 (45.5%)
-- **Function parity:** 138/498 matched (target 225) — 27.7%
-- **Class/type parity:** 30/85 matched (target 87) — 35.3%
-- **Combined symbol parity:** 168/583 matched (target 312) — 28.8%
+- **Files Present:** 10/31 (32.3%)
+- **Function parity:** 138/629 matched (target 225) — 21.9%
+- **Class/type parity:** 30/128 matched (target 87) — 23.4%
+- **Combined symbol parity:** 168/757 matched (target 312) — 22.2%
 - **Average inline-code cosine:** 0.39 (function body across 9 matched files)
 - **Average documentation cosine:** 0.51 (doc text across 9 matched files)
 - **Cheat-zeroed Files:** 2
@@ -27,7 +27,7 @@ No missing high-value files detected.
 
 Every matched file is listed below with function and type symbol parity.
 
-### 1. settings
+### 1. insta.settings
 
 - **Target:** `insta.Settings`
 - **Similarity:** 0.63
@@ -38,7 +38,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 4/6 matched (target 4)
 - **Missing types:** `BindingFuture`, `Output`
 
-### 2. env
+### 2. insta.env
 
 - **Target:** `insta.Env`
 - **Similarity:** 0.00
@@ -50,7 +50,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** `Error`, `SnapshotUpdateBehavior`, `Workspace`, `Err`
 - **Tests:** 0/2 matched
 
-### 3. filters
+### 3. insta.filters
 
 - **Target:** `insta.Filters`
 - **Similarity:** 0.63
@@ -62,7 +62,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** _none_
 - **Tests:** 3/3 matched
 
-### 4. snapshot
+### 4. insta.snapshot
 
 - **Target:** `insta.Snapshot [ZERO]`
 - **Similarity:** 0.00
@@ -74,7 +74,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** `PendingInlineSnapshot`, `TmpSnapshotKind`
 - **Tests:** 0/12 matched
 
-### 5. runtime
+### 5. insta.runtime
 
 - **Target:** `insta.Runtime`
 - **Similarity:** 0.02
@@ -86,7 +86,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** `InlineValue`, `SnapshotName`, `BinarySnapshotValue`, `SnapshotAssertionContext`
 - **Lint issues:** 1
 
-### 6. output
+### 6. insta.output
 
 - **Target:** `insta.Output`
 - **Similarity:** 0.36
@@ -98,7 +98,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** _none_
 - **Tests:** 0/1 matched
 
-### 7. redaction
+### 7. insta.redaction
 
 - **Target:** `insta.Redaction`
 - **Similarity:** 0.66
@@ -110,7 +110,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** `SelectParser`
 - **Tests:** 1/1 matched
 
-### 8. utils
+### 8. insta.utils
 
 - **Target:** `insta.Utils`
 - **Similarity:** 0.38
@@ -153,18 +153,4 @@ For each file to be considered "complete":
 - All tests ported
 - Documentation ported
 - port-lint header present
-
-## Reexport / Wiring Modules
-
-These files match `reexport_modules` patterns in `.ast_distance_config.json`. They are filtered out of
-normal priority and missing-file ladders because they are wiring
-modules, not direct logic ports. Consult them for call-site routing;
-do not treat them as the next implementation target by default.
-
-### Missing
-
-| Source | Expected target | Deps | Source path | Expected path |
-|--------|-----------------|------|-------------|---------------|
-| `vendored.mod` | `content.yaml.vendored.Mod` | 0 | `content/yaml/vendored/mod.rs` | `content/yaml/vendored/Mod.kt` |
-| `lib` | `Lib` | 0 | `lib.rs` | `Lib.kt` |
 

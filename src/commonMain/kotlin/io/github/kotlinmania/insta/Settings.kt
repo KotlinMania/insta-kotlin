@@ -1,4 +1,4 @@
-// port-lint: source settings.rs
+// port-lint: source insta/src/settings.rs
 package io.github.kotlinmania.insta
 
 import io.github.kotlinmania.insta.content.Content

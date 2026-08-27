@@ -1,4 +1,4 @@
-// port-lint: source output.rs
+// port-lint: source insta/src/output.rs
 package io.github.kotlinmania.insta
 
 import io.github.kotlinmania.insta.content.toString as jsonToString
