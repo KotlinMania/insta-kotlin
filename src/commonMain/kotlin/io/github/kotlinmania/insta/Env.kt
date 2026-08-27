@@ -1,4 +1,4 @@
-// port-lint: source insta/src/env.rs
+// port-lint: source env.rs
 package io.github.kotlinmania.insta
 
 enum class OutputBehavior {

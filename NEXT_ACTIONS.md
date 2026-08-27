@@ -4,10 +4,10 @@ Based on AST analysis, here are the concrete next steps.
 
 ## Summary
 
-- **Files Present:** 10/31 (32.3%)
-- **Function parity:** 138/629 matched (target 225) — 21.9%
-- **Class/type parity:** 30/128 matched (target 87) — 23.4%
-- **Combined symbol parity:** 168/757 matched (target 312) — 22.2%
+- **Files Present:** 10/22 (45.5%)
+- **Function parity:** 138/501 matched (target 225) — 27.5%
+- **Class/type parity:** 30/85 matched (target 87) — 35.3%
+- **Combined symbol parity:** 168/586 matched (target 312) — 28.7%
 - **Average inline-code cosine:** 0.39 (function body across 9 matched files)
 - **Average documentation cosine:** 0.51 (doc text across 9 matched files)
 - **Cheat-zeroed Files:** 2
@@ -27,7 +27,7 @@ No missing high-value files detected.
 
 Every matched file is listed below with function and type symbol parity.
 
-### 1. insta.settings
+### 1. settings
 
 - **Target:** `insta.Settings`
 - **Similarity:** 0.63
@@ -38,7 +38,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 4/6 matched (target 4)
 - **Missing types:** `BindingFuture`, `Output`
 
-### 2. insta.env
+### 2. env
 
 - **Target:** `insta.Env`
 - **Similarity:** 0.00
@@ -50,7 +50,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** `Error`, `SnapshotUpdateBehavior`, `Workspace`, `Err`
 - **Tests:** 0/2 matched
 
-### 3. insta.filters
+### 3. filters
 
 - **Target:** `insta.Filters`
 - **Similarity:** 0.63
@@ -62,7 +62,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** _none_
 - **Tests:** 3/3 matched
 
-### 4. insta.snapshot
+### 4. snapshot
 
 - **Target:** `insta.Snapshot [ZERO]`
 - **Similarity:** 0.00
@@ -74,7 +74,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** `PendingInlineSnapshot`, `TmpSnapshotKind`
 - **Tests:** 0/12 matched
 
-### 5. insta.runtime
+### 5. runtime
 
 - **Target:** `insta.Runtime`
 - **Similarity:** 0.02
@@ -86,7 +86,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** `InlineValue`, `SnapshotName`, `BinarySnapshotValue`, `SnapshotAssertionContext`
 - **Lint issues:** 1
 
-### 6. insta.output
+### 6. output
 
 - **Target:** `insta.Output`
 - **Similarity:** 0.36
@@ -98,7 +98,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** _none_
 - **Tests:** 0/1 matched
 
-### 7. insta.redaction
+### 7. redaction
 
 - **Target:** `insta.Redaction`
 - **Similarity:** 0.66
@@ -110,7 +110,7 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing types:** `SelectParser`
 - **Tests:** 1/1 matched
 
-### 8. insta.utils
+### 8. utils
 
 - **Target:** `insta.Utils`
 - **Similarity:** 0.38

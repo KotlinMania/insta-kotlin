@@ -1,4 +1,4 @@
-// port-lint: source insta/src/filters.rs
+// port-lint: source filters.rs
 package io.github.kotlinmania.insta
 
 /**

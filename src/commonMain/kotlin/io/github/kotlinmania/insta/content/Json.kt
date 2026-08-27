@@ -1,4 +1,4 @@
-// port-lint: source insta/src/content/json.rs
+// port-lint: source content/json.rs
 package io.github.kotlinmania.insta.content
 
 /**
