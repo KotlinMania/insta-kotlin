@@ -1,13 +1,21 @@
 // port-lint: source utils.rs
 package io.github.kotlinmania.insta
 
-class FakeStyledObject<D>(val value: D) {
+class FakeStyledObject<D>(
+    val value: D,
+) {
     fun red(): FakeStyledObject<D> = this
+
     fun green(): FakeStyledObject<D> = this
+
     fun yellow(): FakeStyledObject<D> = this
+
     fun cyan(): FakeStyledObject<D> = this
+
     fun bold(): FakeStyledObject<D> = this
+
     fun dim(): FakeStyledObject<D> = this
+
     fun underlined(): FakeStyledObject<D> = this
 
     override fun toString(): kotlin.String = value.toString()

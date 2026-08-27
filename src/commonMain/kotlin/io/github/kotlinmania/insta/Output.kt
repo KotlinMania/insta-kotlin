@@ -1,8 +1,6 @@
 // port-lint: source output.rs
 package io.github.kotlinmania.insta
 
-import io.github.kotlinmania.insta.content.toString as jsonToString
-
 /**
  * Snapshot printer utility.
  */
@@ -46,7 +44,7 @@ class SnapshotPrinter(
 
     fun print() {
         if (title != null) {
-            println("=== ${title} ===")
+            println("=== $title ===")
         }
         printSnapshotDiff()
     }
@@ -83,14 +81,16 @@ class SnapshotPrinter(
 
     private fun printChangeset() {
         println("Diff:")
-        val oldText = when (val o = oldSnapshot?.contents()) {
-            is SnapshotContents.Text -> o.value.contents
-            else -> ""
-        }
-        val newText = when (val n = newSnapshot.contents()) {
-            is SnapshotContents.Text -> n.value.contents
-            else -> ""
-        }
+        val oldText =
+            when (val o = oldSnapshot?.contents()) {
+                is SnapshotContents.Text -> o.value.contents
+                else -> ""
+            }
+        val newText =
+            when (val n = newSnapshot.contents()) {
+                is SnapshotContents.Text -> n.value.contents
+                else -> ""
+            }
         println("--- $oldSnapshotHint\n+++ $newSnapshotHint")
         val oldLines = oldText.lines()
         val newLines = newText.lines()

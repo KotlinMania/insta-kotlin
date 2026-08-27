@@ -272,7 +272,9 @@ class Settings(
     }
 }
 
-class SettingsBindDropGuard(private val old: ActualSettings) {
+class SettingsBindDropGuard(
+    private val old: ActualSettings,
+) {
     fun release() {
         currentActualSettings = old
     }

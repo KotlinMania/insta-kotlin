@@ -7,45 +7,47 @@ import kotlin.test.assertEquals
 class JsonTest {
     @Test
     fun testToString() {
-        val json = toString(
-            Content.Map(
-                listOf(
-                    Content.Entry(
-                        Content.from("environments"),
-                        Content.Seq(
-                            listOf(
-                                Content.from("development"),
-                                Content.from("production"),
+        val json =
+            toString(
+                Content.Map(
+                    listOf(
+                        Content.Entry(
+                            Content.from("environments"),
+                            Content.Seq(
+                                listOf(
+                                    Content.from("development"),
+                                    Content.from("production"),
+                                ),
                             ),
                         ),
+                        Content.Entry(Content.from("cmdline"), Content.Seq(emptyList())),
+                        Content.Entry(Content.from("extra"), Content.Map(emptyList())),
                     ),
-                    Content.Entry(Content.from("cmdline"), Content.Seq(emptyList())),
-                    Content.Entry(Content.from("extra"), Content.Map(emptyList())),
                 ),
-            ),
-        )
+            )
         assertEquals("""{"environments":["development","production"],"cmdline":[],"extra":{}}""", json)
     }
 
     @Test
     fun testToStringPretty() {
-        val json = toStringPretty(
-            Content.Map(
-                listOf(
-                    Content.Entry(
-                        Content.from("environments"),
-                        Content.Seq(
-                            listOf(
-                                Content.from("development"),
-                                Content.from("production"),
+        val json =
+            toStringPretty(
+                Content.Map(
+                    listOf(
+                        Content.Entry(
+                            Content.from("environments"),
+                            Content.Seq(
+                                listOf(
+                                    Content.from("development"),
+                                    Content.from("production"),
+                                ),
                             ),
                         ),
+                        Content.Entry(Content.from("cmdline"), Content.Seq(emptyList())),
+                        Content.Entry(Content.from("extra"), Content.Map(emptyList())),
                     ),
-                    Content.Entry(Content.from("cmdline"), Content.Seq(emptyList())),
-                    Content.Entry(Content.from("extra"), Content.Map(emptyList())),
                 ),
-            ),
-        )
+            )
         val expected = """{
   "environments": [
     "development",
@@ -59,12 +61,13 @@ class JsonTest {
 
     @Test
     fun testToStringNumKeys() {
-        val content = Content.Map(
-            listOf(
-                Content.Entry(Content.from(42u), Content.from(true)),
-                Content.Entry(Content.from(-23), Content.from(false)),
-            ),
-        )
+        val content =
+            Content.Map(
+                listOf(
+                    Content.Entry(Content.from(42u), Content.from(true)),
+                    Content.Entry(Content.from(-23), Content.from(false)),
+                ),
+            )
         val json = toStringPretty(content)
         val expected = """{
   "42": true,
@@ -75,95 +78,96 @@ class JsonTest {
 
     @Test
     fun testToStringPrettyComplex() {
-        val content = Content.Map(
-            listOf(
-                Content.Entry(
-                    Content.from("is_alive"),
-                    Content.NewtypeStruct("Some", Content.from(true)),
-                ),
-                Content.Entry(
-                    Content.from("newtype_variant"),
-                    Content.NewtypeVariant(
-                        "Foo",
-                        0u,
-                        "variant_a",
-                        Content.Struct(
-                            "VariantA",
+        val content =
+            Content.Map(
+                listOf(
+                    Content.Entry(
+                        Content.from("is_alive"),
+                        Content.NewtypeStruct("Some", Content.from(true)),
+                    ),
+                    Content.Entry(
+                        Content.from("newtype_variant"),
+                        Content.NewtypeVariant(
+                            "Foo",
+                            0u,
+                            "variant_a",
+                            Content.Struct(
+                                "VariantA",
+                                listOf(
+                                    Content.Field("field_a", Content.from("value_a")),
+                                    Content.Field("field_b", Content.from(42u)),
+                                ),
+                            ),
+                        ),
+                    ),
+                    Content.Entry(
+                        Content.from("struct_variant"),
+                        Content.StructVariant(
+                            "Foo",
+                            0u,
+                            "variant_b",
                             listOf(
                                 Content.Field("field_a", Content.from("value_a")),
                                 Content.Field("field_b", Content.from(42u)),
                             ),
                         ),
                     ),
-                ),
-                Content.Entry(
-                    Content.from("struct_variant"),
-                    Content.StructVariant(
-                        "Foo",
-                        0u,
-                        "variant_b",
-                        listOf(
-                            Content.Field("field_a", Content.from("value_a")),
-                            Content.Field("field_b", Content.from(42u)),
+                    Content.Entry(
+                        Content.from("tuple_variant"),
+                        Content.TupleVariant(
+                            "Foo",
+                            0u,
+                            "variant_c",
+                            listOf(Content.from("value_a"), Content.from(42u)),
                         ),
                     ),
-                ),
-                Content.Entry(
-                    Content.from("tuple_variant"),
-                    Content.TupleVariant(
-                        "Foo",
-                        0u,
-                        "variant_c",
-                        listOf(Content.from("value_a"), Content.from(42u)),
+                    Content.Entry(Content.from("empty_array"), Content.Seq(emptyList())),
+                    Content.Entry(Content.from("empty_object"), Content.Map(emptyList())),
+                    Content.Entry(Content.from("array"), Content.Seq(listOf(Content.from(true)))),
+                    Content.Entry(
+                        Content.from("object"),
+                        Content.Map(listOf(Content.Entry(Content.from("foo"), Content.from(true)))),
                     ),
-                ),
-                Content.Entry(Content.from("empty_array"), Content.Seq(emptyList())),
-                Content.Entry(Content.from("empty_object"), Content.Map(emptyList())),
-                Content.Entry(Content.from("array"), Content.Seq(listOf(Content.from(true)))),
-                Content.Entry(
-                    Content.from("object"),
-                    Content.Map(listOf(Content.Entry(Content.from("foo"), Content.from(true)))),
-                ),
-                Content.Entry(
-                    Content.from("array_of_objects"),
-                    Content.Seq(
-                        listOf(
-                            Content.Struct(
-                                "MyType",
-                                listOf(
-                                    Content.Field("foo", Content.from("bar")),
-                                    Content.Field("bar", Content.from("xxx")),
+                    Content.Entry(
+                        Content.from("array_of_objects"),
+                        Content.Seq(
+                            listOf(
+                                Content.Struct(
+                                    "MyType",
+                                    listOf(
+                                        Content.Field("foo", Content.from("bar")),
+                                        Content.Field("bar", Content.from("xxx")),
+                                    ),
                                 ),
                             ),
                         ),
                     ),
+                    Content.Entry(
+                        Content.from("unit_variant"),
+                        Content.UnitVariant("Stuff", 0u, "value"),
+                    ),
+                    Content.Entry(Content.from("u8"), Content.from(8u.toUByte())),
+                    Content.Entry(Content.from("u16"), Content.from(16u.toUShort())),
+                    Content.Entry(Content.from("u32"), Content.from(32u)),
+                    Content.Entry(Content.from("u64"), Content.from(64uL)),
+                    Content.Entry(Content.from("u128"), Content.from(UInt128.parse("128"))),
+                    Content.Entry(Content.from("i8"), Content.from(8.toByte())),
+                    Content.Entry(Content.from("i16"), Content.from(16.toShort())),
+                    Content.Entry(Content.from("i32"), Content.from(32)),
+                    Content.Entry(Content.from("i64"), Content.from(64L)),
+                    Content.Entry(Content.from("i128"), Content.from(Int128.parse("128"))),
+                    Content.Entry(Content.from("f32"), Content.from(32.0f)),
+                    Content.Entry(Content.from("f64"), Content.from(64.0)),
+                    Content.Entry(Content.from("char"), Content.fromChar('A')),
+                    Content.Entry(Content.from("bytes"), Content.from("hehe".encodeToByteArray())),
+                    Content.Entry(Content.from("null"), Content.None),
+                    Content.Entry(Content.from("unit"), Content.UnitValue),
+                    Content.Entry(
+                        Content.from("crazy_string"),
+                        Content.from((0..126).map { it.toChar() }.joinToString("")),
+                    ),
                 ),
-                Content.Entry(
-                    Content.from("unit_variant"),
-                    Content.UnitVariant("Stuff", 0u, "value"),
-                ),
-                Content.Entry(Content.from("u8"), Content.from(8u.toUByte())),
-                Content.Entry(Content.from("u16"), Content.from(16u.toUShort())),
-                Content.Entry(Content.from("u32"), Content.from(32u)),
-                Content.Entry(Content.from("u64"), Content.from(64uL)),
-                Content.Entry(Content.from("u128"), Content.from(UInt128.parse("128"))),
-                Content.Entry(Content.from("i8"), Content.from(8.toByte())),
-                Content.Entry(Content.from("i16"), Content.from(16.toShort())),
-                Content.Entry(Content.from("i32"), Content.from(32)),
-                Content.Entry(Content.from("i64"), Content.from(64L)),
-                Content.Entry(Content.from("i128"), Content.from(Int128.parse("128"))),
-                Content.Entry(Content.from("f32"), Content.from(32.0f)),
-                Content.Entry(Content.from("f64"), Content.from(64.0)),
-                Content.Entry(Content.from("char"), Content.fromChar('A')),
-                Content.Entry(Content.from("bytes"), Content.from("hehe".encodeToByteArray())),
-                Content.Entry(Content.from("null"), Content.None),
-                Content.Entry(Content.from("unit"), Content.UnitValue),
-                Content.Entry(
-                    Content.from("crazy_string"),
-                    Content.from((0..126).map { it.toChar() }.joinToString("")),
-                ),
-            ),
-        )
+            )
         val json = toStringPretty(content)
         val expected = """{
   "is_alive": true,

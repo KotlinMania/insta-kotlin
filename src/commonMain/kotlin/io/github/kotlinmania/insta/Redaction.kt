@@ -5,14 +5,19 @@ import io.github.kotlinmania.insta.content.Content
 import kotlin.math.pow
 import kotlin.math.round
 
-class SelectorParseError(message: kotlin.String, private val col: Int = 0) : Exception(message) {
+class SelectorParseError(
+    message: kotlin.String,
+    private val col: Int = 0,
+) : Exception(message) {
     fun column(): Int = col
 }
 
 /**
  * Represents a path for a callback function.
  */
-class ContentPath(val items: List<PathItem>) {
+class ContentPath(
+    val items: List<PathItem>,
+) {
     override fun toString(): kotlin.String {
         val sb = StringBuilder()
         for (item in items) {
@@ -35,9 +40,18 @@ class ContentPath(val items: List<PathItem>) {
 }
 
 sealed class PathItem {
-    data class ContentItem(val content: Content) : PathItem()
-    data class Field(val name: kotlin.String) : PathItem()
-    data class Index(val idx: ULong, val len: ULong) : PathItem()
+    data class ContentItem(
+        val content: Content,
+    ) : PathItem()
+
+    data class Field(
+        val name: kotlin.String,
+    ) : PathItem()
+
+    data class Index(
+        val idx: ULong,
+        val len: ULong,
+    ) : PathItem()
 
     fun asStr(): kotlin.String? =
         when (this) {
@@ -61,10 +75,11 @@ sealed class PathItem {
                 sel
             }
 
-        val (idxVal, lenVal) = when (this) {
-            is Index -> Pair(idx.toLong(), len.toLong())
-            else -> return false
-        }
+        val (idxVal, lenVal) =
+            when (this) {
+                is Index -> Pair(idx.toLong(), len.toLong())
+                else -> return false
+            }
 
         return when {
             start == null && end == null -> true
@@ -79,25 +94,46 @@ sealed class PathItem {
 
 sealed class Segment {
     data object DeepWildcard : Segment()
+
     data object Wildcard : Segment()
-    data class Key(val key: kotlin.String) : Segment()
-    data class Index(val idx: ULong) : Segment()
-    data class Range(val start: Long?, val end: Long?) : Segment()
+
+    data class Key(
+        val key: kotlin.String,
+    ) : Segment()
+
+    data class Index(
+        val idx: ULong,
+    ) : Segment()
+
+    data class Range(
+        val start: Long?,
+        val end: Long?,
+    ) : Segment()
 }
 
 /**
  * Replaces a value with another one.
  */
 sealed class Redaction {
-    data class Static(val content: Content) : Redaction()
-    data class Dynamic(val callback: (Content, ContentPath) -> Content) : Redaction()
+    data class Static(
+        val content: Content,
+    ) : Redaction()
+
+    data class Dynamic(
+        val callback: (Content, ContentPath) -> Content,
+    ) : Redaction()
 
     companion object {
         fun from(content: Content): Redaction = Static(content)
+
         fun from(value: kotlin.String): Redaction = Static(Content.from(value))
+
         fun from(value: Boolean): Redaction = Static(Content.from(value))
+
         fun from(value: Long): Redaction = Static(Content.from(value))
+
         fun from(value: Int): Redaction = Static(Content.from(value))
+
         fun from(value: Double): Redaction = Static(Content.from(value))
     }
 
@@ -125,16 +161,19 @@ fun sortedRedaction(): Redaction {
 
 fun roundedRedaction(decimals: Int): Redaction =
     dynamicRedaction { value, _ ->
-        val f = when (val inner = value.resolveInner()) {
-            is Content.F32 -> inner.value.toDouble()
-            is Content.F64 -> inner.value
-            else -> return@dynamicRedaction value
-        }
+        val f =
+            when (val inner = value.resolveInner()) {
+                is Content.F32 -> inner.value.toDouble()
+                is Content.F64 -> inner.value
+                else -> return@dynamicRedaction value
+            }
         val x = 10.0.pow(decimals.toDouble())
         Content.F64(round(f * x) / x)
     }
 
-class Selector(val selectors: List<List<Segment>>) {
+class Selector(
+    val selectors: List<List<Segment>>,
+) {
     fun makeStatic(): Selector = this
 
     private fun segmentIsMatch(segment: Segment, element: PathItem): Boolean =
@@ -231,45 +270,50 @@ class Selector(val selectors: List<List<Segment>>) {
             return redaction.redact(value, path)
         }
         return when (value) {
-            is Content.Map -> Content.Map(
-                value.value.map { entry ->
-                    path.add(PathItem.Field("\$key"))
-                    val newKey = redactImpl(entry.key, redaction, path)
-                    path.removeAt(path.size - 1)
+            is Content.Map ->
+                Content.Map(
+                    value.value.map { entry ->
+                        path.add(PathItem.Field("\$key"))
+                        val newKey = redactImpl(entry.key, redaction, path)
+                        path.removeAt(path.size - 1)
 
-                    path.add(PathItem.ContentItem(entry.key))
-                    val newVal = redactImpl(entry.value, redaction, path)
-                    path.removeAt(path.size - 1)
+                        path.add(PathItem.ContentItem(entry.key))
+                        val newVal = redactImpl(entry.value, redaction, path)
+                        path.removeAt(path.size - 1)
 
-                    Content.Entry(newKey, newVal)
-                },
-            )
+                        Content.Entry(newKey, newVal)
+                    },
+                )
             is Content.Seq -> Content.Seq(redactSeq(value.value, redaction, path))
             is Content.Tuple -> Content.Tuple(redactSeq(value.value, redaction, path))
             is Content.TupleStruct -> Content.TupleStruct(value.name, redactSeq(value.value, redaction, path))
-            is Content.TupleVariant -> Content.TupleVariant(
-                value.name,
-                value.index,
-                value.variant,
-                redactSeq(value.value, redaction, path),
-            )
+            is Content.TupleVariant ->
+                Content.TupleVariant(
+                    value.name,
+                    value.index,
+                    value.variant,
+                    redactSeq(value.value, redaction, path),
+                )
             is Content.Struct -> Content.Struct(value.name, redactStruct(value.fields, redaction, path))
-            is Content.StructVariant -> Content.StructVariant(
-                value.name,
-                value.index,
-                value.variant,
-                redactStruct(value.fields, redaction, path),
-            )
-            is Content.NewtypeStruct -> Content.NewtypeStruct(
-                value.name,
-                redactImpl(value.value, redaction, path),
-            )
-            is Content.NewtypeVariant -> Content.NewtypeVariant(
-                value.name,
-                value.index,
-                value.variant,
-                redactImpl(value.value, redaction, path),
-            )
+            is Content.StructVariant ->
+                Content.StructVariant(
+                    value.name,
+                    value.index,
+                    value.variant,
+                    redactStruct(value.fields, redaction, path),
+                )
+            is Content.NewtypeStruct ->
+                Content.NewtypeStruct(
+                    value.name,
+                    redactImpl(value.value, redaction, path),
+                )
+            is Content.NewtypeVariant ->
+                Content.NewtypeVariant(
+                    value.name,
+                    value.index,
+                    value.variant,
+                    redactImpl(value.value, redaction, path),
+                )
             is Content.Some -> Content.Some(redactImpl(value.value, redaction, path))
             else -> value
         }
