@@ -1,7 +1,7 @@
 {
   "name": "insta-kotlin",
   "source": {
-    "path": "tmp/insta/src",
+    "path": "tmp",
     "lang": "rust"
   },
   "target": {
