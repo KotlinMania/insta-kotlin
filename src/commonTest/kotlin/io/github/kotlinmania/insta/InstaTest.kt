@@ -1,4 +1,4 @@
-// port-lint: tests test.rs
+// port-lint: tests insta/src/test.rs
 package io.github.kotlinmania.insta
 
 import io.github.kotlinmania.insta.content.Content
