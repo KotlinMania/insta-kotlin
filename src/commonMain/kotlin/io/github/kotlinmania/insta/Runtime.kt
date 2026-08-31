@@ -49,6 +49,7 @@ fun assertSnapshot(
     name: kotlin.String? = null,
     expr: kotlin.String? = null,
 ) {
+    expr?.hashCode()
     val settings = Settings.cloneCurrent()
     var processedValue = value
     val filters = settings.filters()
