@@ -1,4 +1,4 @@
-// port-lint: source runtime.rs
+// port-lint: source insta/src/runtime.rs
 package io.github.kotlinmania.insta
 
 import io.github.kotlinmania.insta.content.Content

@@ -1,4 +1,4 @@
-// port-lint: source redaction.rs
+// port-lint: source insta/src/redaction.rs
 package io.github.kotlinmania.insta
 
 import io.github.kotlinmania.insta.content.Content
