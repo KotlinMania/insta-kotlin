@@ -14,5 +14,20 @@
     "todos": true,
     "lint": true
   },
-  "reexport_modules": []
+  "reexport_modules": [
+    "lib",
+    "lib.rs",
+    "insta/src/lib.rs",
+    "macros",
+    "macros.rs",
+    "insta/src/macros.rs",
+    "content/yaml/mod",
+    "content.yaml.mod",
+    "content/yaml/mod.rs",
+    "insta/src/content/yaml/mod.rs",
+    "content/yaml/vendored/mod",
+    "content.yaml.vendored.mod",
+    "content/yaml/vendored/mod.rs",
+    "insta/src/content/yaml/vendored/mod.rs"
+  ]
 }

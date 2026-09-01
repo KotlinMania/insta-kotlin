@@ -5,9 +5,9 @@ Based on AST analysis, here are the concrete next steps.
 ## Summary
 
 - **Files Present:** 10/31 (32.3%)
-- **Function parity:** 138/629 matched (target 225) — 21.9%
+- **Function parity:** 138/620 matched (target 225) — 22.3%
 - **Class/type parity:** 30/128 matched (target 87) — 23.4%
-- **Combined symbol parity:** 168/757 matched (target 312) — 22.2%
+- **Combined symbol parity:** 168/748 matched (target 312) — 22.5%
 - **Average inline-code cosine:** 0.39 (function body across 9 matched files)
 - **Average documentation cosine:** 0.51 (doc text across 9 matched files)
 - **Cheat-zeroed Files:** 2
@@ -152,4 +152,20 @@ For each file to be considered "complete":
 - All tests ported
 - Documentation ported
 - port-lint header present
+
+## Reexport / Wiring Modules
+
+These files match `reexport_modules` patterns in `.ast_distance_config.json`. They are filtered out of
+normal priority and missing-file ladders because they are wiring
+modules, not direct logic ports. Consult them for call-site routing;
+do not treat them as the next implementation target by default.
+
+### Missing
+
+| Source | Expected target | Deps | Source path | Expected path |
+|--------|-----------------|------|-------------|---------------|
+| `yaml.mod` | `insta.src.content.yaml.Mod` | 0 | `insta/src/content/yaml/mod.rs` | `insta/src/content/yaml/Mod.kt` |
+| `vendored.mod` | `insta.src.content.yaml.vendored.Mod` | 0 | `insta/src/content/yaml/vendored/mod.rs` | `insta/src/content/yaml/vendored/Mod.kt` |
+| `insta.lib` | `insta.src.Lib` | 0 | `insta/src/lib.rs` | `insta/src/Lib.kt` |
+| `insta.macros` | `insta.src.Macros` | 0 | `insta/src/macros.rs` | `insta/src/Macros.kt` |
 
