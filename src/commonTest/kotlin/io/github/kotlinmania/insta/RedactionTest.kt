@@ -1,4 +1,4 @@
-// port-lint: tests insta/src/redaction.rs
+// port-lint: tests redaction.rs
 package io.github.kotlinmania.insta
 
 import kotlin.test.Test
