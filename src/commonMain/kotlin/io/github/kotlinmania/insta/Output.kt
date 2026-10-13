@@ -43,8 +43,9 @@ class SnapshotPrinter(
     }
 
     fun print() {
-        if (title != null) {
-            println("=== $title ===")
+        val currentTitle = title
+        if (currentTitle != null) {
+            println("=== $currentTitle ===")
         }
         printSnapshotDiff()
     }
@@ -73,6 +74,7 @@ class SnapshotPrinter(
             is SnapshotContents.Text -> {
                 println(c.value.contents)
             }
+
             is SnapshotContents.Binary -> {
                 println("<binary data (${c.value.size} bytes)>")
             }

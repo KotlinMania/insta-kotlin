@@ -30,7 +30,7 @@ class Serializer(
     private fun writeIndentation() {
         if (format == Format.Pretty) {
             val spaces = indentation * 2
-            for (i in 0 until spaces) {
+            repeat(spaces) {
                 out.append(' ')
             }
         }
@@ -60,11 +60,13 @@ class Serializer(
                 }
                 writeIndentation()
             }
+
             Format.Condensed -> {
                 if (!first) {
                     writeChar(',')
                 }
             }
+
             Format.SingleLine -> {
                 if (!first) {
                     writeStr(", ")
@@ -102,21 +104,66 @@ class Serializer(
 
     fun serialize(value: Content) {
         when (value) {
-            is Content.Bool -> if (value.value) writeStr("true") else writeStr("false")
-            is Content.U8 -> writeStr(value.value.toString())
-            is Content.U16 -> writeStr(value.value.toString())
-            is Content.U32 -> writeStr(value.value.toString())
-            is Content.U64 -> writeStr(value.value.toString())
-            is Content.U128 -> writeStr(value.value.toString())
-            is Content.I8 -> writeStr(value.value.toString())
-            is Content.I16 -> writeStr(value.value.toString())
-            is Content.I32 -> writeStr(value.value.toString())
-            is Content.I64 -> writeStr(value.value.toString())
-            is Content.I128 -> writeStr(value.value.toString())
-            is Content.F32 -> writeFloat(value.value.toDouble(), !value.value.isNaN() && !value.value.isInfinite())
-            is Content.F64 -> writeFloat(value.value, !value.value.isNaN() && !value.value.isInfinite())
-            is Content.Char -> writeEscapedStr(value.value.toString())
-            is Content.Str -> writeEscapedStr(value.value)
+            is Content.Bool -> {
+                if (value.value) writeStr("true") else writeStr("false")
+            }
+
+            is Content.U8 -> {
+                writeStr(value.value.toString())
+            }
+
+            is Content.U16 -> {
+                writeStr(value.value.toString())
+            }
+
+            is Content.U32 -> {
+                writeStr(value.value.toString())
+            }
+
+            is Content.U64 -> {
+                writeStr(value.value.toString())
+            }
+
+            is Content.U128 -> {
+                writeStr(value.value.toString())
+            }
+
+            is Content.I8 -> {
+                writeStr(value.value.toString())
+            }
+
+            is Content.I16 -> {
+                writeStr(value.value.toString())
+            }
+
+            is Content.I32 -> {
+                writeStr(value.value.toString())
+            }
+
+            is Content.I64 -> {
+                writeStr(value.value.toString())
+            }
+
+            is Content.I128 -> {
+                writeStr(value.value.toString())
+            }
+
+            is Content.F32 -> {
+                writeFloat(value.value.toDouble(), !value.value.isNaN() && !value.value.isInfinite())
+            }
+
+            is Content.F64 -> {
+                writeFloat(value.value, !value.value.isNaN() && !value.value.isInfinite())
+            }
+
+            is Content.Char -> {
+                writeEscapedStr(value.value.toString())
+            }
+
+            is Content.Str -> {
+                writeEscapedStr(value.value)
+            }
+
             is Content.Bytes -> {
                 startContainer('[')
                 for ((idx, byte) in value.value.withIndex()) {
@@ -125,10 +172,23 @@ class Serializer(
                 }
                 endContainer(']', value.value.isEmpty())
             }
-            Content.None, Content.UnitValue, is Content.UnitStruct -> writeStr("null")
-            is Content.Some -> serialize(value.value)
-            is Content.UnitVariant -> writeEscapedStr(value.variant)
-            is Content.NewtypeStruct -> serialize(value.value)
+
+            Content.None, Content.UnitValue, is Content.UnitStruct -> {
+                writeStr("null")
+            }
+
+            is Content.Some -> {
+                serialize(value.value)
+            }
+
+            is Content.UnitVariant -> {
+                writeEscapedStr(value.variant)
+            }
+
+            is Content.NewtypeStruct -> {
+                serialize(value.value)
+            }
+
             is Content.NewtypeVariant -> {
                 startContainer('{')
                 writeComma(true)
@@ -137,9 +197,19 @@ class Serializer(
                 serialize(value.value)
                 endContainer('}', false)
             }
-            is Content.Seq -> serializeArray(value.value)
-            is Content.Tuple -> serializeArray(value.value)
-            is Content.TupleStruct -> serializeArray(value.value)
+
+            is Content.Seq -> {
+                serializeArray(value.value)
+            }
+
+            is Content.Tuple -> {
+                serializeArray(value.value)
+            }
+
+            is Content.TupleStruct -> {
+                serializeArray(value.value)
+            }
+
             is Content.TupleVariant -> {
                 startContainer('{')
                 writeComma(true)
@@ -148,25 +218,47 @@ class Serializer(
                 serializeArray(value.value)
                 endContainer('}', false)
             }
+
             is Content.Map -> {
                 startContainer('{')
                 for ((idx, entry) in value.value.withIndex()) {
                     writeComma(idx == 0)
                     val realKey = entry.key.resolveInner()
                     when {
-                        realKey is Content.Str -> writeEscapedStr(realKey.value)
-                        realKey.asI64() != null -> writeEscapedStr(realKey.asI64()!!.toString())
-                        realKey.asI128() != null -> writeEscapedStr(realKey.asI128()!!.toString())
-                        realKey.asU64() != null -> writeEscapedStr(realKey.asU64()!!.toString())
-                        realKey.asU128() != null -> writeEscapedStr(realKey.asU128()!!.toString())
-                        else -> error("cannot serialize maps without string keys to JSON")
+                        realKey is Content.Str -> {
+                            writeEscapedStr(realKey.value)
+                        }
+
+                        realKey.asI64() != null -> {
+                            writeEscapedStr(realKey.asI64()!!.toString())
+                        }
+
+                        realKey.asI128() != null -> {
+                            writeEscapedStr(realKey.asI128()!!.toString())
+                        }
+
+                        realKey.asU64() != null -> {
+                            writeEscapedStr(realKey.asU64()!!.toString())
+                        }
+
+                        realKey.asU128() != null -> {
+                            writeEscapedStr(realKey.asU128()!!.toString())
+                        }
+
+                        else -> {
+                            error("cannot serialize maps without string keys to JSON")
+                        }
                     }
                     writeColon()
                     serialize(entry.value)
                 }
                 endContainer('}', value.value.isEmpty())
             }
-            is Content.Struct -> serializeObject(value.fields)
+
+            is Content.Struct -> {
+                serializeObject(value.fields)
+            }
+
             is Content.StructVariant -> {
                 startContainer('{')
                 writeComma(true)
@@ -212,20 +304,43 @@ class Serializer(
                 writeStr(value.substring(start, i))
             }
             when (escape.toByte()) {
-                BB -> writeStr("\\b")
-                TT -> writeStr("\\t")
-                NN -> writeStr("\\n")
-                FF -> writeStr("\\f")
-                RR -> writeStr("\\r")
-                QU -> writeStr("\\\"")
-                BS -> writeStr("\\\\")
+                BB -> {
+                    writeStr("\\b")
+                }
+
+                TT -> {
+                    writeStr("\\t")
+                }
+
+                NN -> {
+                    writeStr("\\n")
+                }
+
+                FF -> {
+                    writeStr("\\f")
+                }
+
+                RR -> {
+                    writeStr("\\r")
+                }
+
+                QU -> {
+                    writeStr("\\\"")
+                }
+
+                BS -> {
+                    writeStr("\\\\")
+                }
+
                 U -> {
                     val hex = "0123456789abcdef"
                     writeStr("\\u00")
                     writeChar(hex[(code shr 4) and 0xF])
                     writeChar(hex[code and 0xF])
                 }
-                else -> {}
+
+                else -> {
+                }
             }
             start = i + 1
         }

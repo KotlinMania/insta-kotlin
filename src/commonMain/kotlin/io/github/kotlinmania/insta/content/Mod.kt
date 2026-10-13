@@ -346,21 +346,52 @@ sealed class Content {
     /** Returns the value as unsigned 64-bit integer. */
     fun asULong(): ULong? =
         when (val inner = resolveInner()) {
-            is U8 -> inner.value.toULong()
-            is U16 -> inner.value.toULong()
-            is U32 -> inner.value.toULong()
-            is U64 -> inner.value
-            is U128 -> inner.value.toULongOrNull()
-            is I8 -> inner.value.takeIf { it >= 0 }?.toULong()
-            is I16 -> inner.value.takeIf { it >= 0 }?.toULong()
-            is I32 -> inner.value.takeIf { it >= 0 }?.toULong()
-            is I64 -> inner.value.takeIf { it >= 0 }?.toULong()
-            is I128 ->
+            is U8 -> {
+                inner.value.toULong()
+            }
+
+            is U16 -> {
+                inner.value.toULong()
+            }
+
+            is U32 -> {
+                inner.value.toULong()
+            }
+
+            is U64 -> {
+                inner.value
+            }
+
+            is U128 -> {
+                inner.value.toULongOrNull()
+            }
+
+            is I8 -> {
+                inner.value.takeIf { it >= 0 }?.toULong()
+            }
+
+            is I16 -> {
+                inner.value.takeIf { it >= 0 }?.toULong()
+            }
+
+            is I32 -> {
+                inner.value.takeIf { it >= 0 }?.toULong()
+            }
+
+            is I64 -> {
+                inner.value.takeIf { it >= 0 }?.toULong()
+            }
+
+            is I128 -> {
                 inner.value
                     .toLongOrNull()
                     ?.takeIf { it >= 0 }
                     ?.toULong()
-            else -> null
+            }
+
+            else -> {
+                null
+            }
         }
 
     /** Returns the value as unsigned 64-bit integer. */
@@ -388,26 +419,56 @@ sealed class Content {
     /** Returns the value as signed 64-bit integer. */
     fun asLong(): Long? =
         when (val inner = resolveInner()) {
-            is I8 -> inner.value.toLong()
-            is I16 -> inner.value.toLong()
-            is I32 -> inner.value.toLong()
-            is I64 -> inner.value
-            is I128 -> inner.value.toLongOrNull()
-            is U8 -> inner.value.toLong()
-            is U16 -> inner.value.toLong()
-            is U32 -> inner.value.toLong()
-            is U64 ->
+            is I8 -> {
+                inner.value.toLong()
+            }
+
+            is I16 -> {
+                inner.value.toLong()
+            }
+
+            is I32 -> {
+                inner.value.toLong()
+            }
+
+            is I64 -> {
+                inner.value
+            }
+
+            is I128 -> {
+                inner.value.toLongOrNull()
+            }
+
+            is U8 -> {
+                inner.value.toLong()
+            }
+
+            is U16 -> {
+                inner.value.toLong()
+            }
+
+            is U32 -> {
+                inner.value.toLong()
+            }
+
+            is U64 -> {
                 if (inner.value <= Long.MAX_VALUE.toULong()) {
                     inner.value.toLong()
                 } else {
                     null
                 }
-            is U128 ->
+            }
+
+            is U128 -> {
                 inner.value
                     .toULongOrNull()
                     ?.takeIf { it <= Long.MAX_VALUE.toULong() }
                     ?.toLong()
-            else -> null
+            }
+
+            else -> {
+                null
+            }
         }
 
     /** Returns the value as signed 64-bit integer. */
@@ -450,20 +511,49 @@ sealed class Content {
         }
 
         when (this) {
-            is Some -> value.walk(visit)
-            is NewtypeStruct -> value.walk(visit)
-            is NewtypeVariant -> value.walk(visit)
-            is Seq -> value.forEach { it.walk(visit) }
-            is Map ->
+            is Some -> {
+                value.walk(visit)
+            }
+
+            is NewtypeStruct -> {
+                value.walk(visit)
+            }
+
+            is NewtypeVariant -> {
+                value.walk(visit)
+            }
+
+            is Seq -> {
+                value.forEach { it.walk(visit) }
+            }
+
+            is Map -> {
                 value.forEach { entry ->
                     entry.key.walk(visit)
                     entry.value.walk(visit)
                 }
-            is Struct -> fields.forEach { field -> field.value.walk(visit) }
-            is StructVariant -> fields.forEach { field -> field.value.walk(visit) }
-            is Tuple -> value.forEach { it.walk(visit) }
-            is TupleStruct -> value.forEach { it.walk(visit) }
-            is TupleVariant -> value.forEach { it.walk(visit) }
+            }
+
+            is Struct -> {
+                fields.forEach { field -> field.value.walk(visit) }
+            }
+
+            is StructVariant -> {
+                fields.forEach { field -> field.value.walk(visit) }
+            }
+
+            is Tuple -> {
+                value.forEach { it.walk(visit) }
+            }
+
+            is TupleStruct -> {
+                value.forEach { it.walk(visit) }
+            }
+
+            is TupleVariant -> {
+                value.forEach { it.walk(visit) }
+            }
+
             is Bool,
             is U8,
             is U16,
@@ -484,7 +574,9 @@ sealed class Content {
             UnitValue,
             is UnitStruct,
             is UnitVariant,
-            -> return
+            -> {
+                return
+            }
         }
     }
 

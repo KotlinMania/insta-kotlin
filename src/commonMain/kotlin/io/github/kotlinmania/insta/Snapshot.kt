@@ -43,7 +43,9 @@ data class MetaData(
         inputFile?.let { fields.add(Content.Field("input_file", Content.from(it))) }
 
         when (val kind = snapshotKind) {
-            is SnapshotKind.Text -> {}
+            is SnapshotKind.Text -> {
+            }
+
             is SnapshotKind.Binary -> {
                 fields.add(Content.Field("extension", Content.from(kind.extension)))
                 fields.add(Content.Field("snapshot_kind", Content.from("binary")))
@@ -79,6 +81,7 @@ data class MetaData(
                         }
                     }
                 }
+
                 is Content.Struct -> {
                     for (field in inner.fields) {
                         when (field.name) {
@@ -93,7 +96,9 @@ data class MetaData(
                         }
                     }
                 }
-                else -> {}
+
+                else -> {
+                }
             }
 
             val kind = if (isBinary && ext != null) SnapshotKind.Binary(ext) else SnapshotKind.Text
@@ -151,7 +156,10 @@ data class Snapshot(
                 val match = snapshot.value.matchesLatest(other.snapshot.value)
                 metadata.trimForPersistence() == other.metadata.trimForPersistence() && match
             }
-            else -> matches(other)
+
+            else -> {
+                matches(other)
+            }
         }
 
     fun serializeSnapshot(md: MetaData = metadata): kotlin.String {
