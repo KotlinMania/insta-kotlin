@@ -104,7 +104,7 @@ struct InstaExportTests {
         let meta = MetaData(
             source: "InstaExportTests.swift",
             assertionLine: 10,
-            snapshotDescription: "Swift export test",
+            description: "Swift export test",
             expression: "value",
             info: nil,
             inputFile: nil,
@@ -120,8 +120,9 @@ struct InstaExportTests {
             metadata: meta,
             snapshot: SnapshotContents.Text(value: textContents)
         )
-        #expect(snapshot.moduleName == "SwiftTestHarness")
-        #expect(snapshot.snapshotName == "hello_snap")
+        #expect(snapshot.moduleName() == "SwiftTestHarness")
+        #expect(snapshot.snapshotName() == "hello_snap")
+        #expect(snapshot.metadata().description() == "Swift export test")
 
         let error = content.ContentError.MissingField.shared
         #expect(error.fmt().contains("missing"))

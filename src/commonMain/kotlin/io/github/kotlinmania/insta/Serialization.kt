@@ -5,6 +5,7 @@ import io.github.kotlinmania.insta.content.Content
 import io.github.kotlinmania.insta.content.sortMaps
 import io.github.kotlinmania.insta.content.toStringCompact
 import io.github.kotlinmania.insta.content.toStringPretty
+import io.github.kotlinmania.insta.content.yaml.toString as yamlToString
 
 /**
  * Format used to serialize snapshot contents.
@@ -39,11 +40,12 @@ fun serializeContent(content: Content, format: SerializationFormat): String {
     }
 
     return when (format) {
+        SerializationFormat.Yaml -> yamlToString(c).substring(4)
+
         SerializationFormat.Json -> toStringPretty(c)
 
         SerializationFormat.JsonCompact -> toStringCompact(c)
 
-        SerializationFormat.Yaml,
         SerializationFormat.Csv,
         SerializationFormat.Ron,
         SerializationFormat.Toml,

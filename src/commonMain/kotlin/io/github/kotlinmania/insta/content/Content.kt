@@ -1,4 +1,3 @@
-// port-lint: source content/mod.rs
 package io.github.kotlinmania.insta.content
 
 private const val LONG_MAX_DECIMAL = "9223372036854775807"
@@ -18,16 +17,24 @@ private const val LONG_MIN_ABS_DECIMAL = "9223372036854775808"
 sealed class ContentError {
     data class FailedParsingYaml(
         val path: kotlin.String,
-    ) : ContentError()
+    ) : ContentError() {
+        override fun toString(): kotlin.String = fmt()
+    }
 
-    data object UnexpectedDataType : ContentError()
+    data object UnexpectedDataType : ContentError() {
+        override fun toString(): kotlin.String = fmt()
+    }
 
-    data object MissingField : ContentError()
+    data object MissingField : ContentError() {
+        override fun toString(): kotlin.String = fmt()
+    }
 
     data class FileIo(
         val message: kotlin.String,
         val path: kotlin.String,
-    ) : ContentError()
+    ) : ContentError() {
+        override fun toString(): kotlin.String = fmt()
+    }
 
     fun fmt(): kotlin.String =
         when (this) {

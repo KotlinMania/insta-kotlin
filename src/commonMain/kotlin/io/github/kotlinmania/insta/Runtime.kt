@@ -56,10 +56,17 @@ fun assertSnapshot(
     processedValue = filters.applyTo(processedValue)
 
     if (reference != null) {
-        val expected = filters.applyTo(reference)
-        if (processedValue.trimEnd() != expected.trimEnd()) {
+        val expected =
+            SnapshotContents.Text(
+                TextSnapshotContents.fromInlineLiteral(filters.applyTo(reference)),
+            )
+        val actual =
+            SnapshotContents.Text(
+                TextSnapshotContents.new(processedValue, TextSnapshotKind.Inline),
+            )
+        if (actual != expected) {
             throw AssertionError(
-                "Snapshot assertion failed for '${name ?: "inline"}':\nExpected: $expected\nActual:   $processedValue",
+                "Snapshot assertion failed for '${name ?: "inline"}':\nExpected: ${expected.value}\nActual:   ${actual.value}",
             )
         }
     }

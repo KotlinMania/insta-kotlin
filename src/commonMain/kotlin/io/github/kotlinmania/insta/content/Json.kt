@@ -371,8 +371,7 @@ private val ESCAPE: IntArray =
             0x0D -> RR.toInt()
             0x22 -> QU.toInt()
             0x5C -> BS.toInt()
-            in 0x00..0x1F -> U.toInt()
-            else -> 0
+            else -> if (idx < 0x20) U.toInt() else 0
         }
     }
 
