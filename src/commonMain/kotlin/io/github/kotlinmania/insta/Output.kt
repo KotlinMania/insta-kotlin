@@ -60,9 +60,9 @@ class SnapshotPrinter(
     }
 
     private fun printSnapshotSummary() {
-        val name = newSnapshot.snapshotName ?: "unnamed"
+        val name = newSnapshot.snapshotName() ?: "unnamed"
         println("Snapshot: $name")
-        val expr = newSnapshot.metadata.expression
+        val expr = newSnapshot.metadata().expression()
         if (expr != null) {
             println("Expression: $expr")
         }
