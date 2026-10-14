@@ -159,7 +159,7 @@ class JsonTest {
                     Content.Entry(Content.from("f32"), Content.from(32.0f)),
                     Content.Entry(Content.from("f64"), Content.from(64.0)),
                     Content.Entry(Content.from("char"), Content.fromChar('A')),
-                    Content.Entry(Content.from("bytes"), Content.from("hehe".encodeToByteArray())),
+                    Content.Entry(Content.from("bytes"), Content.from("hehe".encodeToByteArray().toList())),
                     Content.Entry(Content.from("null"), Content.None),
                     Content.Entry(Content.from("unit"), Content.UnitValue),
                     Content.Entry(

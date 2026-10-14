@@ -5,6 +5,14 @@ import io.github.kotlinmania.insta.content.Content
 import io.github.kotlinmania.oncecell.sync.Lazy
 
 /**
+ * A single redaction selector and its replacement rule.
+ */
+data class RedactionEntry(
+    val selector: kotlin.String,
+    val redaction: Redaction,
+)
+
+/**
  * Represents stored redactions.
  */
 class Redactions {
@@ -29,10 +37,10 @@ class Redactions {
     companion object {
         fun default(): Redactions = Redactions()
 
-        fun from(pairs: Iterable<Pair<kotlin.String, Redaction>>): Redactions {
+        fun from(entries: List<RedactionEntry>): Redactions {
             val redactions = default()
-            for ((selStr, redaction) in pairs) {
-                redactions.add(Selector.parse(selStr), redaction)
+            for (entry in entries) {
+                redactions.add(Selector.parse(entry.selector), entry.redaction)
             }
             return redactions
         }
@@ -148,9 +156,11 @@ private var currentActualSettings: ActualSettings = defaultSettings.value.deepCo
 /**
  * Configures how insta operates at test time.
  */
-class Settings(
-    private var inner: ActualSettings = currentActualSettings.deepCopy(),
+class Settings internal constructor(
+    private var inner: ActualSettings,
 ) {
+    constructor() : this(currentActualSettings.deepCopy())
+
     companion object {
         fun default(): Settings = Settings(defaultSettings.value.deepCopy())
 
@@ -158,7 +168,7 @@ class Settings(
 
         fun cloneCurrent(): Settings = Settings(currentActualSettings.deepCopy())
 
-        fun <R> with(f: (Settings) -> R): R = f(Settings(currentActualSettings.deepCopy()))
+        internal fun <R> with(f: (Settings) -> R): R = f(Settings(currentActualSettings.deepCopy()))
     }
 
     fun privateInnerMut(): ActualSettings = inner
@@ -234,7 +244,7 @@ class Settings(
         inner.redactions.add(Selector.parse(selector), replacement)
     }
 
-    fun addDynamicRedaction(selector: kotlin.String, callback: (Content, ContentPath) -> Content) {
+    fun addDynamicRedaction(selector: kotlin.String, callback: DynamicRedactionCallback) {
         addRedaction(selector, dynamicRedaction(callback))
     }
 
@@ -273,10 +283,10 @@ class Settings(
 
     fun snapshotPath(): kotlin.String = inner.snapshotPath
 
-    fun <R> bind(f: () -> R): R {
+    fun bind(f: SnapshotBlock) {
         val old = currentActualSettings.deepCopy()
         currentActualSettings = inner.deepCopy()
-        return try {
+        try {
             f()
         } finally {
             currentActualSettings = old
@@ -290,7 +300,7 @@ class Settings(
     }
 }
 
-class SettingsBindDropGuard(
+class SettingsBindDropGuard internal constructor(
     private val old: ActualSettings,
 ) {
     fun release() {
@@ -298,8 +308,22 @@ class SettingsBindDropGuard(
     }
 }
 
-fun <R> withSettings(configure: Settings.() -> Unit, block: () -> R): R {
+/**
+ * Action block executed within a configured snapshot settings scope.
+ */
+fun interface SnapshotBlock {
+    operator fun invoke()
+}
+
+/**
+ * Callback that mutates a [Settings] instance before running a [SnapshotBlock].
+ */
+fun interface SettingsConfigurer {
+    operator fun invoke(settings: Settings)
+}
+
+fun withSettings(configure: SettingsConfigurer, block: SnapshotBlock) {
     val settings = Settings.cloneCurrent()
-    settings.configure()
-    return settings.bind(block)
+    configure(settings)
+    settings.bind(block)
 }

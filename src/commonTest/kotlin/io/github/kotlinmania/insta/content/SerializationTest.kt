@@ -22,8 +22,8 @@ class SerializationTest {
         assertTrue(s1 < s2)
         assertTrue(u1 < s1)
 
-        val bytes1 = Key.Bytes(byteArrayOf(1, 2))
-        val bytes2 = Key.Bytes(byteArrayOf(1, 3))
+        val bytes1 = Key.Bytes(listOf(1.toByte(), 2.toByte()))
+        val bytes2 = Key.Bytes(listOf(1.toByte(), 3.toByte()))
         assertTrue(bytes1 < bytes2)
         assertTrue(s1 < bytes1)
         assertTrue(bytes1 < Key.Other)

@@ -18,14 +18,14 @@ class FiltersTest {
 
     @Test
     fun testStaticStrArrayConversion() {
-        val arr = listOf(Pair("a1", "b1"), Pair("a2", "b2"))
+        val arr = listOf(FilterRule("a1", "b1"), FilterRule("a2", "b2"))
         val filters = Filters.fromIter(arr)
         assertEquals("b1 b2", filters.applyTo("a1 a2"))
     }
 
     @Test
     fun testVecStrConversion() {
-        val vec = listOf(Pair("a1", "b1"), Pair("a2", "b2"))
+        val vec = listOf(FilterRule("a1", "b1"), FilterRule("a2", "b2"))
         val filters = Filters.from(vec)
         assertEquals("b1 b2", filters.applyTo("a1 a2"))
     }

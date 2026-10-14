@@ -6,10 +6,23 @@ import kotlin.math.pow
 import kotlin.math.round
 
 class SelectorParseError(
-    message: kotlin.String,
+    val message: kotlin.String,
     private val col: Int = 0,
-) : Exception(message) {
+) {
     fun column(): Int = col
+
+    override fun toString(): kotlin.String = message
+}
+
+internal class SelectorParseException(
+    val error: SelectorParseError,
+) : IllegalArgumentException(error.message)
+
+/**
+ * Callback function for dynamic redactions.
+ */
+fun interface DynamicRedactionCallback {
+    operator fun invoke(value: Content, path: ContentPath): Content
 }
 
 /**
@@ -139,7 +152,7 @@ sealed class Redaction {
     ) : Redaction()
 
     data class Dynamic(
-        val callback: (Content, ContentPath) -> Content,
+        val callback: DynamicRedactionCallback,
     ) : Redaction()
 
     companion object {
@@ -163,7 +176,7 @@ sealed class Redaction {
         }
 }
 
-fun dynamicRedaction(callback: (Content, ContentPath) -> Content): Redaction =
+fun dynamicRedaction(callback: DynamicRedactionCallback): Redaction =
     Redaction.Dynamic(callback)
 
 fun sortedRedaction(): Redaction {
@@ -386,7 +399,7 @@ class Selector(
                 if (c == '.') {
                     if (i + 2 < s.length && s[i + 1] == '*' && s[i + 2] == '*') {
                         if (haveDeepWildcard) {
-                            throw SelectorParseError("deep wildcard used twice", i)
+                            throw SelectorParseException(SelectorParseError("deep wildcard used twice", i))
                         }
                         haveDeepWildcard = true
                         segments.add(Segment.DeepWildcard)
@@ -408,7 +421,7 @@ class Selector(
                 } else if (c == '[') {
                     val close = s.indexOf(']', i)
                     if (close == -1) {
-                        throw SelectorParseError("unclosed subscript", i)
+                        throw SelectorParseException(SelectorParseError("unclosed subscript", i))
                     }
                     val inside = s.substring(i + 1, close).trim()
                     i = close + 1
@@ -425,11 +438,13 @@ class Selector(
                         val unquoted = inside.substring(1, inside.length - 1)
                         segments.add(Segment.Key(unquoted))
                     } else {
-                        val idx = inside.toULongOrNull() ?: throw SelectorParseError("invalid index: $inside", i)
+                        val idx =
+                            inside.toULongOrNull()
+                                ?: throw SelectorParseException(SelectorParseError("invalid index: $inside", i))
                         segments.add(Segment.Index(idx))
                     }
                 } else {
-                    throw SelectorParseError("unexpected character: $c", i)
+                    throw SelectorParseException(SelectorParseError("unexpected character: $c", i))
                 }
             }
             return segments

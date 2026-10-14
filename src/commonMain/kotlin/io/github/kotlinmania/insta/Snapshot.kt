@@ -17,7 +17,7 @@ sealed class SnapshotKind {
  */
 data class MetaData(
     var source: kotlin.String? = null,
-    var assertionLine: UInt? = null,
+    var assertionLine: Int? = null,
     var snapshotDescription: kotlin.String? = null,
     var expression: kotlin.String? = null,
     var info: Content? = null,
@@ -36,7 +36,7 @@ data class MetaData(
     fun asContent(): Content {
         val fields = mutableListOf<Content.Field>()
         source?.let { fields.add(Content.Field("source", Content.from(it))) }
-        assertionLine?.let { fields.add(Content.Field("assertion_line", Content.from(it))) }
+        assertionLine?.let { fields.add(Content.Field("assertion_line", Content.from(it.toUInt()))) }
         snapshotDescription?.let { fields.add(Content.Field("description", Content.from(it))) }
         expression?.let { fields.add(Content.Field("expression", Content.from(it))) }
         info?.let { fields.add(Content.Field("info", it)) }
@@ -58,7 +58,7 @@ data class MetaData(
     companion object {
         fun fromContent(content: Content): MetaData {
             var src: kotlin.String? = null
-            var line: UInt? = null
+            var line: Int? = null
             var desc: kotlin.String? = null
             var expr: kotlin.String? = null
             var inf: Content? = null
@@ -71,7 +71,7 @@ data class MetaData(
                     for (entry in inner.value) {
                         when (entry.key.asStr()) {
                             "source" -> src = entry.value.asStr()
-                            "assertion_line" -> line = entry.value.asU64()?.toUInt()
+                            "assertion_line" -> line = entry.value.asU64()?.toInt()
                             "description" -> desc = entry.value.asStr()
                             "expression" -> expr = entry.value.asStr()
                             "info" -> if (!entry.value.isNil()) inf = entry.value
@@ -86,7 +86,7 @@ data class MetaData(
                     for (field in inner.fields) {
                         when (field.name) {
                             "source" -> src = field.value.asStr()
-                            "assertion_line" -> line = field.value.asU64()?.toUInt()
+                            "assertion_line" -> line = field.value.asU64()?.toInt()
                             "description" -> desc = field.value.asStr()
                             "expression" -> expr = field.value.asStr()
                             "info" -> if (!field.value.isNil()) inf = field.value
@@ -128,7 +128,7 @@ sealed class SnapshotContents {
     ) : SnapshotContents()
 
     data class Binary(
-        val value: List<UByte>,
+        val value: List<Byte>,
     ) : SnapshotContents()
 
     fun isBinary(): Boolean = this is Binary

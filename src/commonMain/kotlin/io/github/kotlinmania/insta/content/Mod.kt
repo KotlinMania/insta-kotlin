@@ -15,29 +15,29 @@ private const val LONG_MIN_ABS_DECIMAL = "9223372036854775808"
  */
 
 /** An internal error type for content-related errors. */
-sealed class Error {
+sealed class ContentError {
     data class FailedParsingYaml(
         val path: kotlin.String,
-    ) : Error()
+    ) : ContentError()
 
-    data object UnexpectedDataType : Error()
+    data object UnexpectedDataType : ContentError()
 
-    data object MissingField : Error()
+    data object MissingField : ContentError()
 
     data class FileIo(
         val message: kotlin.String,
         val path: kotlin.String,
-    ) : Error()
+    ) : ContentError()
 
-    fun fmt(): kotlin.String = toString()
-
-    override fun toString(): kotlin.String =
+    fun fmt(): kotlin.String =
         when (this) {
             is FailedParsingYaml -> "Failed parsing the YAML from $path"
             UnexpectedDataType -> "The present data type wasn't what was expected"
             MissingField -> "A required field was missing"
             is FileIo -> "File error for $path: $message"
         }
+
+    override fun toString(): kotlin.String = fmt()
 }
 
 /**
@@ -212,7 +212,7 @@ sealed class Content {
     ) : Content()
 
     data class Bytes(
-        val value: List<UByte>,
+        val value: List<Byte>,
     ) : Content()
 
     data object None : Content()
@@ -314,7 +314,7 @@ sealed class Content {
     fun asStr(): kotlin.String? = asString()
 
     /** Returns the value as bytes. */
-    fun asBytes(): List<UByte>? =
+    fun asBytes(): List<Byte>? =
         when (val inner = resolveInner()) {
             is Bytes -> inner.value
             else -> null
@@ -505,7 +505,7 @@ sealed class Content {
     fun asF64(): Double? = asDouble()
 
     /** Walks recursively through the content tree. */
-    fun walk(visit: (Content) -> Boolean) {
+    fun walk(visit: ContentVisitor) {
         if (!visit(this)) {
             return
         }
@@ -611,12 +611,15 @@ sealed class Content {
 
         fun from(value: kotlin.String): Content = Str(value)
 
-        fun from(value: ByteArray): Content = Bytes(value.map { it.toUByte() })
-
-        fun from(value: UByteArray): Content = Bytes(value.toList())
+        fun from(value: List<Byte>): Content = Bytes(value)
 
         fun unit(): Content = UnitValue
     }
+}
+
+/** Visitor callback for walking a content tree. */
+fun interface ContentVisitor {
+    operator fun invoke(content: Content): Boolean
 }
 
 private fun kotlin.String.trimLeadingZeroes(): kotlin.String =

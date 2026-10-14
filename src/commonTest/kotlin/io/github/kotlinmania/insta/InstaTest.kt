@@ -40,8 +40,8 @@ class InstaTest {
                 ),
             )
 
-        withSettings({
-            addRedaction(".id", Redaction.from("[REDACTED]"))
+        withSettings({ settings ->
+            settings.addRedaction(".id", Redaction.from("[REDACTED]"))
         }) {
             assertJsonSnapshot(
                 content,
