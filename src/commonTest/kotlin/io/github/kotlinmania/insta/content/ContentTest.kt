@@ -32,8 +32,8 @@ class ContentTest {
         val strVal = Content.from("hello")
         assertEquals("hello", strVal.asString())
 
-        val bytesVal = Content.from(byteArrayOf(1, 2, 3))
-        assertEquals(listOf(1.toUByte(), 2.toUByte(), 3.toUByte()), bytesVal.asBytes())
+        val bytesVal = Content.from(listOf(1.toByte(), 2.toByte(), 3.toByte()))
+        assertEquals(listOf(1.toByte(), 2.toByte(), 3.toByte()), bytesVal.asBytes())
 
         val unitVal = Content.unit()
         assertTrue(unitVal.isNil())
@@ -89,16 +89,16 @@ class ContentTest {
 
     @Test
     fun testErrors() {
-        val err1 = Error.FailedParsingYaml("foo.yaml")
+        val err1 = ContentError.FailedParsingYaml("foo.yaml")
         assertTrue(err1.toString().contains("foo.yaml"))
 
-        val err2 = Error.UnexpectedDataType
+        val err2 = ContentError.UnexpectedDataType
         assertTrue(err2.toString().isNotEmpty())
 
-        val err3 = Error.MissingField
+        val err3 = ContentError.MissingField
         assertTrue(err3.toString().isNotEmpty())
 
-        val err4 = Error.FileIo("Not found", "bar.txt")
+        val err4 = ContentError.FileIo("Not found", "bar.txt")
         assertTrue(err4.toString().contains("bar.txt"))
     }
 }

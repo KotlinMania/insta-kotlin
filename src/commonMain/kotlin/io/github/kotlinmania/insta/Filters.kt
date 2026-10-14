@@ -2,6 +2,14 @@
 package io.github.kotlinmania.insta
 
 /**
+ * A single regex filter rule and its replacement string.
+ */
+data class FilterRule(
+    val pattern: kotlin.String,
+    val replacement: kotlin.String,
+)
+
+/**
  * Represents stored filters.
  */
 class Filters {
@@ -18,15 +26,15 @@ class Filters {
     companion object {
         fun default(): Filters = Filters()
 
-        fun from(pairs: Iterable<Pair<kotlin.String, kotlin.String>>): Filters {
+        fun from(rules: List<FilterRule>): Filters {
             val filters = default()
-            for ((regex, replacement) in pairs) {
-                filters.add(regex, replacement)
+            for (rule in rules) {
+                filters.add(rule.pattern, rule.replacement)
             }
             return filters
         }
 
-        fun fromIter(iter: Iterable<Pair<kotlin.String, kotlin.String>>): Filters = from(iter)
+        fun fromIter(iter: List<FilterRule>): Filters = from(iter)
     }
 
     /**

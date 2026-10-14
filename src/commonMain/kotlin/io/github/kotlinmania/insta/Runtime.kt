@@ -23,17 +23,17 @@ sealed class SnapshotValue {
 
     data class Binary(
         val name: kotlin.String?,
-        val content: List<UByte>,
+        val content: List<Byte>,
         val extension: kotlin.String,
     ) : SnapshotValue()
 }
 
 private var allowDuplicatesFlag: Boolean = false
 
-fun <T> withAllowDuplicates(block: () -> T): T {
+fun withAllowDuplicates(block: SnapshotBlock) {
     val old = allowDuplicatesFlag
     allowDuplicatesFlag = true
-    return try {
+    try {
         block()
     } finally {
         allowDuplicatesFlag = old
@@ -66,10 +66,22 @@ fun assertSnapshot(
 }
 
 /**
- * Asserts a debug string snapshot of an object.
+ * Asserts a debug string snapshot of a formatted value.
  */
 fun assertDebugSnapshot(
-    value: Any?,
+    value: kotlin.String,
+    reference: kotlin.String? = null,
+    name: kotlin.String? = null,
+    expr: kotlin.String? = null,
+) {
+    assertSnapshot(value, reference, name, expr)
+}
+
+/**
+ * Asserts a debug string snapshot of a Content tree.
+ */
+fun assertDebugSnapshot(
+    value: Content,
     reference: kotlin.String? = null,
     name: kotlin.String? = null,
     expr: kotlin.String? = null,

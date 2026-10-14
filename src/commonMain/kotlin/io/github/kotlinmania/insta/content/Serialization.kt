@@ -4,7 +4,7 @@ package io.github.kotlinmania.insta.content
 /**
  * Key representation for content mapping keys.
  */
-sealed class Key : Comparable<Key> {
+sealed class Key {
     data class Bool(
         val value: Boolean,
     ) : Key()
@@ -34,13 +34,8 @@ sealed class Key : Comparable<Key> {
     ) : Key()
 
     data class Bytes(
-        val value: ByteArray,
-    ) : Key() {
-        override fun equals(other: Any?): Boolean =
-            other is Bytes && value.contentEquals(other.value)
-
-        override fun hashCode(): Int = value.contentHashCode()
-    }
+        val value: List<Byte>,
+    ) : Key()
 
     data object Other : Key()
 
@@ -57,7 +52,7 @@ sealed class Key : Comparable<Key> {
             Other -> 9
         }
 
-    override fun compareTo(other: Key): Int {
+    operator fun compareTo(other: Key): Int {
         val selfDisc = discriminant()
         val otherDisc = other.discriminant()
         if (selfDisc != otherDisc) {
@@ -96,7 +91,7 @@ sealed class Key : Comparable<Key> {
                 val oBytes = (other as Bytes).value
                 val minLen = minOf(value.size, oBytes.size)
                 for (i in 0 until minLen) {
-                    val cmp = value[i].compareTo(oBytes[i])
+                    val cmp = value[i].toUByte().compareTo(oBytes[i].toUByte())
                     if (cmp != 0) return cmp
                 }
                 value.size.compareTo(oBytes.size)
@@ -129,7 +124,7 @@ fun Content.asKey(): Key =
         is Content.F32 -> Key.F64(inner.value.toDouble())
         is Content.F64 -> Key.F64(inner.value)
         is Content.Str -> Key.Str(inner.value)
-        is Content.Bytes -> Key.Bytes(inner.value.map { it.toByte() }.toByteArray())
+        is Content.Bytes -> Key.Bytes(inner.value)
         else -> Key.Other
     }
 

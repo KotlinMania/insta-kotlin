@@ -17,10 +17,11 @@ enum class Format {
  * Serializes content to JSON.
  */
 class Serializer(
-    private val out: StringBuilder = StringBuilder(),
     var format: Format = Format.Condensed,
-    private var indentation: Int = 0,
 ) {
+    private val out: StringBuilder = StringBuilder()
+    private var indentation: Int = 0
+
     companion object {
         fun new(): Serializer = Serializer()
     }
@@ -168,7 +169,7 @@ class Serializer(
                 startContainer('[')
                 for ((idx, byte) in value.value.withIndex()) {
                     writeComma(idx == 0)
-                    writeStr(byte.toString())
+                    writeStr(byte.toUByte().toString())
                 }
                 endContainer(']', value.value.isEmpty())
             }

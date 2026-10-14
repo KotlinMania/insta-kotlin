@@ -14,7 +14,7 @@ class SnapshotPrinter(
     private var showInfo: Boolean = false
     private var showDiff: Boolean = false
     private var title: kotlin.String? = null
-    private var line: UInt? = null
+    private var line: Int? = null
     private var snapshotFile: kotlin.String? = null
 
     fun setSnapshotHints(old: kotlin.String, new: kotlin.String) {
@@ -34,7 +34,7 @@ class SnapshotPrinter(
         this.title = title
     }
 
-    fun setLine(line: UInt?) {
+    fun setLine(line: Int?) {
         this.line = line
     }
 
