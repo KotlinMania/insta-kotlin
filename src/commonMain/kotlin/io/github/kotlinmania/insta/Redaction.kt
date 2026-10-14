@@ -31,8 +31,14 @@ class ContentPath(
                         sb.append("<content>")
                     }
                 }
-                is PathItem.Field -> sb.append(item.name)
-                is PathItem.Index -> sb.append(item.idx.toString())
+
+                is PathItem.Field -> {
+                    sb.append(item.name)
+                }
+
+                is PathItem.Index -> {
+                    sb.append(item.idx.toString())
+                }
             }
         }
         return sb.toString()
@@ -82,12 +88,25 @@ sealed class PathItem {
             }
 
         return when {
-            start == null && end == null -> true
-            start == null && end != null -> idxVal < expandRange(end, lenVal)
-            start != null && end == null -> idxVal >= expandRange(start, lenVal)
-            start != null && end != null ->
+            start == null && end == null -> {
+                true
+            }
+
+            start == null && end != null -> {
+                idxVal < expandRange(end, lenVal)
+            }
+
+            start != null && end == null -> {
+                idxVal >= expandRange(start, lenVal)
+            }
+
+            start != null && end != null -> {
                 idxVal >= expandRange(start, lenVal) && idxVal < expandRange(end, lenVal)
-            else -> false
+            }
+
+            else -> {
+                false
+            }
         }
     }
 }
@@ -270,7 +289,7 @@ class Selector(
             return redaction.redact(value, path)
         }
         return when (value) {
-            is Content.Map ->
+            is Content.Map -> {
                 Content.Map(
                     value.value.map { entry ->
                         path.add(PathItem.Field("\$key"))
@@ -284,38 +303,65 @@ class Selector(
                         Content.Entry(newKey, newVal)
                     },
                 )
-            is Content.Seq -> Content.Seq(redactSeq(value.value, redaction, path))
-            is Content.Tuple -> Content.Tuple(redactSeq(value.value, redaction, path))
-            is Content.TupleStruct -> Content.TupleStruct(value.name, redactSeq(value.value, redaction, path))
-            is Content.TupleVariant ->
+            }
+
+            is Content.Seq -> {
+                Content.Seq(redactSeq(value.value, redaction, path))
+            }
+
+            is Content.Tuple -> {
+                Content.Tuple(redactSeq(value.value, redaction, path))
+            }
+
+            is Content.TupleStruct -> {
+                Content.TupleStruct(value.name, redactSeq(value.value, redaction, path))
+            }
+
+            is Content.TupleVariant -> {
                 Content.TupleVariant(
                     value.name,
                     value.index,
                     value.variant,
                     redactSeq(value.value, redaction, path),
                 )
-            is Content.Struct -> Content.Struct(value.name, redactStruct(value.fields, redaction, path))
-            is Content.StructVariant ->
+            }
+
+            is Content.Struct -> {
+                Content.Struct(value.name, redactStruct(value.fields, redaction, path))
+            }
+
+            is Content.StructVariant -> {
                 Content.StructVariant(
                     value.name,
                     value.index,
                     value.variant,
                     redactStruct(value.fields, redaction, path),
                 )
-            is Content.NewtypeStruct ->
+            }
+
+            is Content.NewtypeStruct -> {
                 Content.NewtypeStruct(
                     value.name,
                     redactImpl(value.value, redaction, path),
                 )
-            is Content.NewtypeVariant ->
+            }
+
+            is Content.NewtypeVariant -> {
                 Content.NewtypeVariant(
                     value.name,
                     value.index,
                     value.variant,
                     redactImpl(value.value, redaction, path),
                 )
-            is Content.Some -> Content.Some(redactImpl(value.value, redaction, path))
-            else -> value
+            }
+
+            is Content.Some -> {
+                Content.Some(redactImpl(value.value, redaction, path))
+            }
+
+            else -> {
+                value
+            }
         }
     }
 
