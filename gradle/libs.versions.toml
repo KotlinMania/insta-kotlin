@@ -4,6 +4,10 @@ coroutines = "1.11.0"
 serialization = "1.11.0"
 datetime = "0.8.0"
 collectionsImmutable = "0.5.2"
+globset = "0.1.2"
+onceCell = "0.1.1"
+regex = "0.1.0"
+serde = "0.1.10"
 androidKmp = "9.4.1"
 vanniktech = "0.37.0"
 detekt = "2.0.0-alpha.6"
@@ -27,6 +31,10 @@ kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime" }
 collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "collectionsImmutable" }
+globset-kotlin = { module = "io.github.kotlinmania:globset-kotlin", version.ref = "globset" }
+once-cell-kotlin = { module = "io.github.kotlinmania:once-cell-kotlin", version.ref = "onceCell" }
+regex-kotlin = { module = "io.github.kotlinmania:regex-kotlin", version.ref = "regex" }
+serde-kotlin = { module = "io.github.kotlinmania:serde-kotlin", version.ref = "serde" }
 kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime", version.ref = "kotlinxBenchmark" }
 
 [bundles]
@@ -36,4 +44,9 @@ insta-commonMain = [
   "kotlinx-serialization-json",
   "kotlinx-datetime",
   "collections-immutable",
+  "globset-kotlin",
+  "once-cell-kotlin",
+  "regex-kotlin",
+  "serde-kotlin",
 ]
+

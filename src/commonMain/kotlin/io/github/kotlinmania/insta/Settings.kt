@@ -2,6 +2,7 @@
 package io.github.kotlinmania.insta
 
 import io.github.kotlinmania.insta.content.Content
+import io.github.kotlinmania.oncecell.sync.Lazy
 
 /**
  * Represents stored redactions.
@@ -125,7 +126,24 @@ data class ActualSettings(
         )
 }
 
-private var currentActualSettings: ActualSettings = ActualSettings()
+private val defaultSettings: Lazy<ActualSettings> =
+    Lazy.new {
+        ActualSettings(
+            sortMaps = false,
+            snapshotPath = "snapshots",
+            snapshotSuffix = "",
+            inputFile = null,
+            snapshotDescription = null,
+            info = null,
+            omitExpression = false,
+            prependModuleToSnapshot = true,
+            redactions = Redactions.default(),
+            filters = Filters.default(),
+            allowEmptyGlob = false,
+        )
+    }
+
+private var currentActualSettings: ActualSettings = defaultSettings.value.deepCopy()
 
 /**
  * Configures how insta operates at test time.
@@ -134,7 +152,7 @@ class Settings(
     private var inner: ActualSettings = currentActualSettings.deepCopy(),
 ) {
     companion object {
-        fun default(): Settings = Settings(ActualSettings())
+        fun default(): Settings = Settings(defaultSettings.value.deepCopy())
 
         fun new(): Settings = default()
 
