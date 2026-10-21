@@ -38,8 +38,6 @@ data class ToolConfig(
     val snapshotUpdate: SnapshotUpdate = SnapshotUpdate.Auto,
     val globFailFast: Boolean = false,
 ) {
-    fun globFailFast(): Boolean = globFailFast
-
     companion object {
         fun default(): ToolConfig = ToolConfig()
     }

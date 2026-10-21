@@ -58,7 +58,7 @@ fun globExec(
     val stack = GLOB_STACK.value
     stack.add(
         GlobCollector(
-            failFast = getToolConfig(workspaceDir).globFailFast(),
+            failFast = getToolConfig(workspaceDir).globFailFast,
             failed = 0,
             showInstaHint = false,
         ),

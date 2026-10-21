@@ -14,7 +14,7 @@ class GlobTest {
 
         val visited = mutableListOf<kotlin.String>()
         globExec(".", "inputs", "*.txt") { path ->
-            val contents = readTextFile(path) ?: ""
+            val contents = readTextFile(path).orEmpty()
             visited.add(contents)
         }
         assertEquals(listOf("hello a", "hello b"), visited)
@@ -27,7 +27,7 @@ class GlobTest {
 
         val visited = mutableListOf<kotlin.String>()
         globExec(".", "inputs-nested", "*/*.txt") { path ->
-            val contents = readTextFile(path) ?: ""
+            val contents = readTextFile(path).orEmpty()
             visited.add(contents)
         }
         assertEquals(listOf("nested a", "nested b"), visited)
@@ -39,7 +39,7 @@ class GlobTest {
 
         val visited = mutableListOf<kotlin.String>()
         globExec(".", "link-to-inputs", "*.txt") { path ->
-            val contents = readTextFile(path) ?: ""
+            val contents = readTextFile(path).orEmpty()
             visited.add(contents)
         }
         assertEquals(listOf("link c"), visited)

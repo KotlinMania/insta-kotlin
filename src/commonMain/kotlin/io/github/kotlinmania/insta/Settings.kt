@@ -79,7 +79,7 @@ class Redactions {
 /**
  * Actual settings configuration holding mutable snapshot parameters.
  */
-data class ActualSettings(
+internal data class ActualSettings(
     var sortMaps: Boolean = false,
     var snapshotPath: kotlin.String = "snapshots",
     var snapshotSuffix: kotlin.String = "",
@@ -254,7 +254,7 @@ class Settings internal constructor(
     /**
      * Internal mutable accessor for settings.
      */
-    fun privateInnerMut(): ActualSettings = inner
+    internal fun privateInnerMut(): ActualSettings = inner
 
     /**
      * Enables forceful sorting of maps before serialization.
@@ -494,10 +494,10 @@ class Settings internal constructor(
     /**
      * Runs a function with the current settings bound to the scope.
      */
-    fun <R> bind(f: () -> R): R {
+    fun bind(f: SnapshotBlock) {
         val old = currentActualSettings.deepCopy()
         currentActualSettings = inner.deepCopy()
-        return try {
+        try {
             f()
         } finally {
             currentActualSettings = old
@@ -531,15 +531,27 @@ class SettingsBindDropGuard internal constructor(
 }
 
 /**
- * Executes a block of code with modified snapshot settings.
+ * Action block executed within a configured snapshot settings scope.
  */
-fun <R> withSettings(
-    configure: (Settings) -> Unit,
-    block: () -> R,
-): R {
-    val settings = Settings.cloneCurrent()
-    configure(settings)
-    return settings.bind(block)
+fun interface SnapshotBlock {
+    operator fun invoke()
 }
 
+/**
+ * Callback that mutates a [Settings] instance before running a [SnapshotBlock].
+ */
+fun interface SettingsConfigurer {
+    operator fun invoke(settings: Settings)
+}
 
+/**
+ * Executes a block of code with modified snapshot settings.
+ */
+fun withSettings(
+    configure: SettingsConfigurer,
+    block: SnapshotBlock,
+) {
+    val settings = Settings.cloneCurrent()
+    configure(settings)
+    settings.bind(block)
+}
