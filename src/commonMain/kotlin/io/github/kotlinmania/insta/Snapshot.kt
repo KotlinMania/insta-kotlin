@@ -35,6 +35,8 @@ internal fun appendTextFile(
 
 internal fun readTextFile(path: kotlin.String): kotlin.String? = virtualTextFiles[path]
 
+internal fun listVirtualFileKeys(): Set<kotlin.String> = virtualTextFiles.keys + virtualBinaryFiles.keys
+
 internal fun removeVirtualFile(path: kotlin.String) {
     virtualTextFiles.remove(path)
     virtualBinaryFiles.remove(path)

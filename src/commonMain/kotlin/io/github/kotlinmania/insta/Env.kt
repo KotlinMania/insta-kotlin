@@ -38,7 +38,14 @@ data class ToolConfig(
     val snapshotUpdate: SnapshotUpdate = SnapshotUpdate.Auto,
     val globFailFast: Boolean = false,
 ) {
+    fun globFailFast(): Boolean = globFailFast
+
     companion object {
         fun default(): ToolConfig = ToolConfig()
     }
 }
+
+/**
+ * Returns the tool config for the given workspace directory.
+ */
+fun getToolConfig(workspaceDir: kotlin.String): ToolConfig = ToolConfig.default()

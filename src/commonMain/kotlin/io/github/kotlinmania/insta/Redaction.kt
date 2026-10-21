@@ -5,13 +5,31 @@ import io.github.kotlinmania.insta.content.Content
 import kotlin.math.pow
 import kotlin.math.round
 
+/**
+ * Error returned when parsing a selector string.
+ */
 class SelectorParseError(
     val message: kotlin.String,
     private val col: Int = 0,
 ) {
+    /**
+     * Returns the column where the error occurred.
+     */
     fun column(): Int = col
 
-    override fun toString(): kotlin.String = message
+    /**
+     * Formats the error message.
+     */
+    fun fmt(): kotlin.String = message
+
+    override fun toString(): kotlin.String = fmt()
+}
+
+/**
+ * Parser for selectors.
+ */
+object SelectParser {
+    fun parse(selector: kotlin.String): Selector = Selector.parse(selector)
 }
 
 internal class SelectorParseException(
@@ -58,20 +76,29 @@ class ContentPath(
     }
 }
 
+/**
+ * Component item in a content path.
+ */
 sealed class PathItem {
+    /** Content node item. */
     data class ContentItem(
         val content: Content,
     ) : PathItem()
 
+    /** Struct field name item. */
     data class Field(
         val name: kotlin.String,
     ) : PathItem()
 
+    /** Sequence index and length item. */
     data class Index(
         val idx: ULong,
         val len: ULong,
     ) : PathItem()
 
+    /**
+     * Returns string value if this is a content item or field.
+     */
     fun asStr(): kotlin.String? =
         when (this) {
             is ContentItem -> content.asStr()
@@ -79,6 +106,9 @@ sealed class PathItem {
             is Index -> null
         }
 
+    /**
+     * Returns unsigned 64-bit integer index if this is an index or integer content item.
+     */
     fun asU64(): ULong? =
         when (this) {
             is ContentItem -> content.asU64()
@@ -86,6 +116,9 @@ sealed class PathItem {
             is Index -> idx
         }
 
+    /**
+     * Checks if this item falls within the given start and end range bounds.
+     */
     fun rangeCheck(start: Long?, end: Long?): Boolean {
         fun expandRange(sel: Long, length: Long): Long =
             if (sel < 0) {
@@ -124,19 +157,27 @@ sealed class PathItem {
     }
 }
 
+/**
+ * Path segment in a selector pattern.
+ */
 sealed class Segment {
+    /** Matches any depth of nested elements. */
     data object DeepWildcard : Segment()
 
+    /** Matches a single element. */
     data object Wildcard : Segment()
 
+    /** Matches a struct field or map key. */
     data class Key(
         val key: kotlin.String,
     ) : Segment()
 
+    /** Matches an exact sequence index. */
     data class Index(
         val idx: ULong,
     ) : Segment()
 
+    /** Matches a range of sequence indices. */
     data class Range(
         val start: Long?,
         val end: Long?,
@@ -145,30 +186,47 @@ sealed class Segment {
 
 /**
  * Replaces a value with another one.
+ *
+ * Represents a redaction rule.
  */
 sealed class Redaction {
+    /**
+     * Static redaction with pre-computed content.
+     */
     data class Static(
         val content: Content,
     ) : Redaction()
 
+    /**
+     * Dynamic redaction with a callback.
+     */
     data class Dynamic(
         val callback: DynamicRedactionCallback,
     ) : Redaction()
 
     companion object {
+        /** Creates a static redaction from content. */
         fun from(content: Content): Redaction = Static(content)
 
+        /** Creates a static redaction from string. */
         fun from(value: kotlin.String): Redaction = Static(Content.from(value))
 
+        /** Creates a static redaction from boolean. */
         fun from(value: Boolean): Redaction = Static(Content.from(value))
 
+        /** Creates a static redaction from long integer. */
         fun from(value: Long): Redaction = Static(Content.from(value))
 
+        /** Creates a static redaction from integer. */
         fun from(value: Int): Redaction = Static(Content.from(value))
 
+        /** Creates a static redaction from floating point. */
         fun from(value: Double): Redaction = Static(Content.from(value))
     }
 
+    /**
+     * Performs the redaction of the value at the given path.
+     */
     fun redact(value: Content, path: List<PathItem>): Content =
         when (this) {
             is Static -> content
@@ -176,9 +234,20 @@ sealed class Redaction {
         }
 }
 
+/**
+ * Creates a dynamic redaction.
+ *
+ * Can be used to redact a value with a dynamically computed replacement
+ * or perform assertions before replacing.
+ */
 fun dynamicRedaction(callback: DynamicRedactionCallback): Redaction =
     Redaction.Dynamic(callback)
 
+/**
+ * Creates a dynamic redaction that sorts elements at the selector.
+ *
+ * Useful to force sets or maps to have deterministic ordering.
+ */
 fun sortedRedaction(): Redaction {
     fun sort(value: Content): Content =
         when (val inner = value.resolveInner()) {
@@ -191,6 +260,9 @@ fun sortedRedaction(): Redaction {
     return dynamicRedaction { value, _ -> sort(value) }
 }
 
+/**
+ * Creates a redaction that rounds floating point numbers to decimal places.
+ */
 fun roundedRedaction(decimals: Int): Redaction =
     dynamicRedaction { value, _ ->
         val f =
@@ -203,6 +275,9 @@ fun roundedRedaction(decimals: Int): Redaction =
         Content.F64(round(f * x) / x)
     }
 
+/**
+ * Parsed selector structure used to match paths for redactions.
+ */
 class Selector(
     val selectors: List<List<Segment>>,
 ) {
