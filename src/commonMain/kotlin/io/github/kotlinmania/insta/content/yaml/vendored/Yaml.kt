@@ -1,18 +1,20 @@
 // port-lint: source content/yaml/vendored/yaml.rs
 package io.github.kotlinmania.insta.content.yaml.vendored
 
+/**
+ * An entry in a YAML hash map.
+ */
 data class YamlHashEntry(
     val key: Yaml,
     val value: Yaml,
 )
 
 /**
- * A YAML node is stored as this [Yaml] sealed class, which provides an easy way to
- * access a YAML document.
+ * A YAML node representation supporting easy document traversal and inspection.
  */
 sealed class Yaml {
     data class Real(
-        val value: kotlin.String,
+        val value: String,
     ) : Yaml()
 
     data class Integer(
@@ -20,7 +22,7 @@ sealed class Yaml {
     ) : Yaml()
 
     data class StringValue(
-        val value: kotlin.String,
+        val value: String,
     ) : Yaml()
 
     data class BooleanValue(
@@ -39,7 +41,7 @@ sealed class Yaml {
 
     data object BadValue : Yaml()
 
-    fun asStr(): kotlin.String? = (this as? StringValue)?.value
+    fun asStr(): String? = (this as? StringValue)?.value
 
     fun asI64(): Long? = (this as? Integer)?.value
 
@@ -51,28 +53,75 @@ sealed class Yaml {
 
     fun asHash(): List<YamlHashEntry>? = (this as? Hash)?.value
 
+    fun intoString(): String? = asStr()
+
+    fun intoI64(): Long? = asI64()
+
+    fun intoF64(): Double? = asF64()
+
+    fun intoBool(): Boolean? = asBool()
+
+    fun intoVec(): List<Yaml>? = asVec()
+
+    fun intoHash(): List<YamlHashEntry>? = asHash()
+
     fun isNull(): Boolean = this is Null
 
     fun isBadValue(): Boolean = this is BadValue
 
     fun isArray(): Boolean = this is Array
 
+    operator fun get(idx: String): Yaml {
+        if (this is Hash) {
+            for (entry in value) {
+                val k = entry.key
+                if (k is StringValue && k.value == idx) {
+                    return entry.value
+                }
+            }
+        }
+        return BadValue
+    }
+
+    operator fun get(idx: Int): Yaml {
+        if (this is Array) {
+            return value.getOrNull(idx) ?: BadValue
+        }
+        if (this is Hash) {
+            return value.getOrNull(idx)?.value ?: BadValue
+        }
+        return BadValue
+    }
+
+    operator fun iterator(): Iterator<Yaml> =
+        when (this) {
+            is Array -> value.iterator()
+            is Hash -> value.map { it.value }.iterator()
+            else -> emptyList<Yaml>().iterator()
+        }
+
     companion object {
-        fun fromStr(v: kotlin.String): Yaml {
+        fun fromStr(v: String): Yaml {
             if (v.startsWith("0x")) {
-                val n = v.drop(2).toLongOrNull(16)
+                val rest = v.substring(2)
+                val n = rest.toLongOrNull(16)
                 if (n != null) {
                     return Integer(n)
                 }
             }
             if (v.startsWith("0o")) {
-                val n = v.drop(2).toLongOrNull(8)
+                val rest = v.substring(2)
+                val n = rest.toLongOrNull(8)
                 if (n != null) {
                     return Integer(n)
                 }
             }
-            if (v.startsWith("+") && v.drop(1).toLongOrNull() != null) {
-                return Integer(v.drop(1).toLong())
+            if (v.startsWith("+")) {
+                val rest = v.substring(1)
+                val n = rest.toLongOrNull()
+                if (n != null) {
+                    return Integer(n)
+                }
             }
             return when (v) {
                 "~", "null" -> {
@@ -102,7 +151,7 @@ sealed class Yaml {
     }
 }
 
-internal fun parseF64(v: kotlin.String): Double? =
+internal fun parseF64(v: String): Double? =
     when (v) {
         ".inf", ".Inf", ".INF", "+.inf", "+.Inf", "+.INF" -> Double.POSITIVE_INFINITY
         "-.inf", "-.Inf", "-.INF" -> Double.NEGATIVE_INFINITY
@@ -110,302 +159,145 @@ internal fun parseF64(v: kotlin.String): Double? =
         else -> v.toDoubleOrNull()
     }
 
-class YamlLoader(
-    val docs: List<Yaml> = emptyList(),
-) {
-    companion object {
-        fun loadFromStr(source: kotlin.String): List<Yaml>? {
-            val trimmed = source.trim()
-            if (trimmed.isEmpty()) {
-                return emptyList()
-            }
-            val body =
-                if (trimmed.startsWith("---")) {
-                    trimmed.removePrefix("---").trim()
-                } else {
-                    trimmed
-                }
-            if (body.isEmpty() || body == "{}") {
-                return listOf(Yaml.Hash(emptyList()))
-            }
-            val parsed = parseYamlDocument(body) ?: return null
-            return listOf(parsed)
-        }
-    }
-}
+/**
+ * Event receiver that constructs a tree of [Yaml] nodes from parser events.
+ */
+internal class YamlLoader internal constructor() : MarkedEventReceiver {
+    internal val docs: ArrayList<Yaml> = ArrayList()
+    private val docStack: ArrayList<Pair<Yaml, Int>> = ArrayList()
+    private val keyStack: ArrayList<Yaml> = ArrayList()
+    private val anchorMap: MutableMap<Int, Yaml> = LinkedHashMap()
 
-private fun parseYamlDocument(body: kotlin.String): Yaml? {
-    val trimmed = body.trim()
-    if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
-        val cursor = JsonLikeCursor(trimmed)
-        val value = cursor.parseValue() ?: return null
-        cursor.skipWhitespace()
-        if (cursor.pos != trimmed.length) return null
-        return value
-    }
-    if (trimmed.contains('{') || trimmed.contains('}') || trimmed.contains('[') || trimmed.contains(']')) {
-        return null
-    }
-    val lines = body.lines()
-    return parseIndentedBlock(lines, 0, lines.size)
-}
+    override fun onEvent(
+        ev: Event,
+        mark: Marker,
+    ) {
+        when (ev) {
+            is Event.DocumentStart -> {}
 
-private fun parseIndentedBlock(
-    lines: List<kotlin.String>,
-    startIdx: Int,
-    endIdx: Int,
-): Yaml? {
-    val entries = mutableListOf<YamlHashEntry>()
-    var i = startIdx
-    while (i < endIdx) {
-        val rawLine = lines[i]
-        val trimmed = rawLine.trim()
-        if (trimmed.isEmpty() || trimmed.startsWith("#") || trimmed == "---") {
-            i++
-            continue
-        }
-        val colonIdx = rawLine.indexOf(':')
-        if (colonIdx <= 0) {
-            return null
-        }
-        val keyStr = rawLine.substring(0, colonIdx).trim()
-        val keyYaml = parseScalarToken(keyStr) ?: return null
-        val rest = rawLine.substring(colonIdx + 1).trim()
-        if (rest.isNotEmpty()) {
-            val valYaml =
-                when (rest) {
-                    "{}" -> Yaml.Hash(emptyList())
-                    "[]" -> Yaml.Array(emptyList())
-                    else -> parseScalarToken(rest) ?: return null
-                }
-            entries.add(YamlHashEntry(keyYaml, valYaml))
-            i++
-        } else {
-            val parentIndent = rawLine.takeWhile { it == ' ' }.length
-            var j = i + 1
-            while (j < endIdx) {
-                val nextTrimmed = lines[j].trim()
-                if (nextTrimmed.isEmpty() || nextTrimmed.startsWith("#")) {
-                    j++
-                    continue
-                }
-                val nextIndent = lines[j].takeWhile { it == ' ' }.length
-                if (nextIndent <= parentIndent) {
-                    break
-                }
-                j++
-            }
-            val nested = parseIndentedBlock(lines, i + 1, j) ?: return null
-            entries.add(YamlHashEntry(keyYaml, nested))
-            i = j
-        }
-    }
-    return Yaml.Hash(entries)
-}
-
-private fun parseScalarToken(token: kotlin.String): Yaml? {
-    if (token.startsWith("\"")) {
-        if (!token.endsWith("\"") || token.length < 2) return null
-        return Yaml.StringValue(unescapeDoubleQuoted(token.substring(1, token.length - 1)) ?: return null)
-    }
-    if (token.startsWith("'")) {
-        if (!token.endsWith("'") || token.length < 2) return null
-        return Yaml.StringValue(token.substring(1, token.length - 1).replace("''", "'"))
-    }
-    return Yaml.fromStr(token)
-}
-
-private fun unescapeDoubleQuoted(raw: kotlin.String): kotlin.String? {
-    val sb = StringBuilder()
-    var i = 0
-    while (i < raw.length) {
-        val c = raw[i++]
-        if (c == '\\') {
-            if (i >= raw.length) return null
-            val esc = raw[i++]
-            if (esc == 'u') {
-                if (i + 4 > raw.length) return null
-                val hex = raw.substring(i, i + 4).toIntOrNull(16) ?: return null
-                sb.append(hex.toChar())
-                i += 4
-            } else {
-                val decoded =
-                    when (esc) {
-                        '"' -> '"'
-                        '\\' -> '\\'
-                        '/' -> '/'
-                        'b' -> '\b'
-                        'f' -> '\u000c'
-                        'n' -> '\n'
-                        'r' -> '\r'
-                        't' -> '\t'
-                        '0' -> '\u0000'
-                        else -> esc
-                    }
-                sb.append(decoded)
-            }
-        } else {
-            sb.append(c)
-        }
-    }
-    return sb.toString()
-}
-
-private class JsonLikeCursor(
-    val input: kotlin.String,
-) {
-    var pos: Int = 0
-
-    fun skipWhitespace() {
-        while (pos < input.length && input[pos].isWhitespace()) {
-            pos++
-        }
-    }
-
-    fun parseValue(): Yaml? {
-        skipWhitespace()
-        if (pos >= input.length) return null
-        return when (input[pos]) {
-            '{' -> parseObject()
-            '[' -> parseArray()
-            '"' -> parseString()
-            else -> parsePrimitive()
-        }
-    }
-
-    private fun parseObject(): Yaml? {
-        pos++
-        skipWhitespace()
-        if (pos < input.length && input[pos] == '}') {
-            pos++
-            return Yaml.Hash(emptyList())
-        }
-        val entries = mutableListOf<YamlHashEntry>()
-        while (pos < input.length) {
-            val key = parseValue() ?: return null
-            skipWhitespace()
-            if (pos >= input.length || input[pos] != ':') return null
-            pos++
-            val value = parseValue() ?: return null
-            entries.add(YamlHashEntry(key, value))
-            skipWhitespace()
-            if (pos >= input.length) return null
-            when (input[pos]) {
-                ',' -> {
-                    pos++
-                }
-
-                '}' -> {
-                    pos++
-                    return Yaml.Hash(entries)
-                }
-
-                else -> {
-                    return null
+            is Event.DocumentEnd -> {
+                when (docStack.size) {
+                    0 -> docs.add(Yaml.BadValue)
+                    1 -> docs.add(docStack.removeLast().first)
+                    else -> error("unreachable")
                 }
             }
-        }
-        return null
-    }
 
-    private fun parseArray(): Yaml? {
-        pos++
-        skipWhitespace()
-        if (pos < input.length && input[pos] == ']') {
-            pos++
-            return Yaml.Array(emptyList())
-        }
-        val items = mutableListOf<Yaml>()
-        while (pos < input.length) {
-            val item = parseValue() ?: return null
-            items.add(item)
-            skipWhitespace()
-            if (pos >= input.length) return null
-            when (input[pos]) {
-                ',' -> {
-                    pos++
-                }
-
-                ']' -> {
-                    pos++
-                    return Yaml.Array(items)
-                }
-
-                else -> {
-                    return null
-                }
+            is Event.SequenceStart -> {
+                docStack.add(Pair(Yaml.Array(ArrayList()), ev.anchorId))
             }
-        }
-        return null
-    }
 
-    private fun parseString(): Yaml? {
-        pos++
-        val sb = StringBuilder()
-        while (pos < input.length) {
-            val c = input[pos++]
-            if (c == '"') {
-                return Yaml.StringValue(sb.toString())
+            is Event.SequenceEnd -> {
+                val node = docStack.removeLast()
+                insertNewNode(node)
             }
-            if (c == '\\') {
-                if (pos >= input.length) return null
-                val esc = input[pos++]
-                if (esc == 'u') {
-                    if (pos + 4 > input.length) return null
-                    val hex = input.substring(pos, pos + 4).toIntOrNull(16) ?: return null
-                    sb.append(hex.toChar())
-                    pos += 4
-                } else {
-                    val decoded =
-                        when (esc) {
-                            '"' -> '"'
-                            '\\' -> '\\'
-                            '/' -> '/'
-                            'b' -> '\b'
-                            'f' -> '\u000c'
-                            'n' -> '\n'
-                            'r' -> '\r'
-                            't' -> '\t'
-                            else -> return null
+
+            is Event.MappingStart -> {
+                docStack.add(Pair(Yaml.Hash(ArrayList()), ev.anchorId))
+                keyStack.add(Yaml.BadValue)
+            }
+
+            is Event.MappingEnd -> {
+                keyStack.removeLast()
+                val node = docStack.removeLast()
+                insertNewNode(node)
+            }
+
+            is Event.Scalar -> {
+                val node =
+                    if (ev.style != TScalarStyle.Plain) {
+                        Yaml.StringValue(ev.value)
+                    } else if (ev.tag is TokenType.Tag) {
+                        val handle = ev.tag.handle
+                        val suffix = ev.tag.suffix
+                        if (handle == "!!") {
+                            when (suffix) {
+                                "bool" -> {
+                                    when (ev.value) {
+                                        "true" -> Yaml.BooleanValue(true)
+                                        "false" -> Yaml.BooleanValue(false)
+                                        else -> Yaml.BadValue
+                                    }
+                                }
+
+                                "int" -> {
+                                    ev.value.toLongOrNull()?.let { Yaml.Integer(it) } ?: Yaml.BadValue
+                                }
+
+                                "float" -> {
+                                    if (parseF64(ev.value) != null) Yaml.Real(ev.value) else Yaml.BadValue
+                                }
+
+                                "null" -> {
+                                    when (ev.value) {
+                                        "~", "null" -> Yaml.Null
+                                        else -> Yaml.BadValue
+                                    }
+                                }
+
+                                else -> {
+                                    Yaml.StringValue(ev.value)
+                                }
+                            }
+                        } else {
+                            Yaml.StringValue(ev.value)
                         }
-                    sb.append(decoded)
-                }
-            } else {
-                sb.append(c)
+                    } else {
+                        Yaml.fromStr(ev.value)
+                    }
+                insertNewNode(Pair(node, ev.anchorId))
             }
+
+            is Event.Alias -> {
+                val node = anchorMap[ev.anchorId] ?: Yaml.BadValue
+                insertNewNode(Pair(node, 0))
+            }
+
+            else -> {}
         }
-        return null
     }
 
-    private fun parsePrimitive(): Yaml? {
-        val start = pos
-        while (pos < input.length && !input[pos].isWhitespace() && input[pos] !in ",{}[]:") {
-            pos++
+    private fun insertNewNode(node: Pair<Yaml, Int>) {
+        if (node.second > 0) {
+            anchorMap[node.second] = node.first
         }
-        if (pos == start) return null
-        val token = input.substring(start, pos)
-        return when (token) {
-            "null", "~" -> {
-                Yaml.Null
-            }
-
-            "true" -> {
-                Yaml.BooleanValue(true)
-            }
-
-            "false" -> {
-                Yaml.BooleanValue(false)
-            }
-
-            else -> {
-                val l = token.toLongOrNull()
-                if (l != null) {
-                    Yaml.Integer(l)
-                } else if (token.toDoubleOrNull() != null) {
-                    Yaml.Real(token)
-                } else {
-                    null
+        if (docStack.isEmpty()) {
+            docStack.add(node)
+        } else {
+            val parent = docStack.last()
+            val parentVal = parent.first
+            when (parentVal) {
+                is Yaml.Array -> {
+                    (parentVal.value as MutableList<Yaml>).add(node.first)
                 }
+
+                is Yaml.Hash -> {
+                    val curKey = keyStack.last()
+                    if (curKey.isBadValue()) {
+                        keyStack[keyStack.size - 1] = node.first
+                    } else {
+                        val newKey = curKey
+                        keyStack[keyStack.size - 1] = Yaml.BadValue
+                        (parentVal.value as MutableList<YamlHashEntry>).add(YamlHashEntry(newKey, node.first))
+                    }
+                }
+
+                else -> {
+                    error("unreachable")
+                }
+            }
+        }
+    }
+
+    companion object {
+        fun loadFromStr(source: String): List<Yaml>? {
+            val loader = YamlLoader()
+            val parser = Parser.new(source.iterator())
+            return try {
+                parser.load(loader, true)
+                loader.docs
+            } catch (e: ScanError) {
+                null
             }
         }
     }
