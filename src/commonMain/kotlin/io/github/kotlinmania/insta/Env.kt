@@ -42,3 +42,8 @@ data class ToolConfig(
         fun default(): ToolConfig = ToolConfig()
     }
 }
+
+/**
+ * Returns the tool config for the given workspace directory.
+ */
+fun getToolConfig(workspaceDir: kotlin.String): ToolConfig = ToolConfig.default()
