@@ -1,5 +1,10 @@
 package io.github.kotlinmania.insta.content
 
+import io.github.kotlinmania.serde.SerdeResult
+import io.github.kotlinmania.serde.serdeCatching
+import io.github.kotlinmania.serdecore.ser.Serialize
+import io.github.kotlinmania.serdecore.ser.Serializer
+
 private const val LONG_MAX_DECIMAL = "9223372036854775807"
 private const val LONG_MIN_ABS_DECIMAL = "9223372036854775808"
 
@@ -52,7 +57,7 @@ sealed class ContentError {
  */
 class UInt128 private constructor(
     val decimal: kotlin.String,
-) {
+) : Comparable<UInt128> {
     companion object {
         fun from(value: ULong): UInt128 = UInt128(value.toString())
 
@@ -61,6 +66,13 @@ class UInt128 private constructor(
             require(value.all { it in '0'..'9' }) { "UInt128 must be decimal digits" }
             return UInt128(value.trimLeadingZeroes())
         }
+    }
+
+    override fun compareTo(other: UInt128): Int {
+        if (decimal.length != other.decimal.length) {
+            return decimal.length.compareTo(other.decimal.length)
+        }
+        return decimal.compareTo(other.decimal)
     }
 
     fun toULongOrNull(): ULong? {
@@ -88,7 +100,7 @@ class UInt128 private constructor(
  */
 class Int128 private constructor(
     val decimal: kotlin.String,
-) {
+) : Comparable<Int128> {
     companion object {
         fun from(value: Long): Int128 = Int128(value.toString())
 
@@ -105,6 +117,21 @@ class Int128 private constructor(
 
     val isNegative: Boolean
         get() = decimal.startsWith("-")
+
+    override fun compareTo(other: Int128): Int {
+        if (isNegative != other.isNegative) {
+            return if (isNegative) -1 else 1
+        }
+        val s1 = if (isNegative) decimal.substring(1) else decimal
+        val s2 = if (other.isNegative) other.decimal.substring(1) else other.decimal
+        val cmp =
+            if (s1.length != s2.length) {
+                s1.length.compareTo(s2.length)
+            } else {
+                s1.compareTo(s2)
+            }
+        return if (isNegative) -cmp else cmp
+    }
 
     fun toLongOrNull(): Long? {
         val negative = isNegative
@@ -157,7 +184,9 @@ class Int128 private constructor(
  * If you do need to pattern match, use resolveInner() to resolve such internal
  * wrappers first.
  */
-sealed class Content {
+sealed class Content :
+    Serialize,
+    Comparable<Content> {
     data class Bool(
         val value: Boolean,
     ) : Content()
@@ -587,6 +616,367 @@ sealed class Content {
         }
     }
 
+    fun discriminant(): Int =
+        when (this) {
+            is Bool -> 1
+            is U8 -> 2
+            is U16 -> 3
+            is U32 -> 4
+            is U64 -> 5
+            is U128 -> 6
+            is I8 -> 7
+            is I16 -> 8
+            is I32 -> 9
+            is I64 -> 10
+            is I128 -> 11
+            is F32 -> 12
+            is F64 -> 13
+            is Char -> 14
+            is Str -> 15
+            is Bytes -> 16
+            None -> 17
+            is Some -> 18
+            UnitValue -> 19
+            is UnitStruct -> 20
+            is UnitVariant -> 21
+            is NewtypeStruct -> 22
+            is NewtypeVariant -> 23
+            is Seq -> 24
+            is Tuple -> 25
+            is TupleStruct -> 26
+            is TupleVariant -> 27
+            is Map -> 28
+            is Struct -> 29
+            is StructVariant -> 30
+        }
+
+    override fun compareTo(other: Content): Int {
+        val d1 = discriminant()
+        val d2 = other.discriminant()
+        if (d1 != d2) return d1.compareTo(d2)
+        return when (this) {
+            is Bool -> {
+                value.compareTo((other as Bool).value)
+            }
+
+            is U8 -> {
+                value.compareTo((other as U8).value)
+            }
+
+            is U16 -> {
+                value.compareTo((other as U16).value)
+            }
+
+            is U32 -> {
+                value.compareTo((other as U32).value)
+            }
+
+            is U64 -> {
+                value.compareTo((other as U64).value)
+            }
+
+            is U128 -> {
+                value.compareTo((other as U128).value)
+            }
+
+            is I8 -> {
+                value.compareTo((other as I8).value)
+            }
+
+            is I16 -> {
+                value.compareTo((other as I16).value)
+            }
+
+            is I32 -> {
+                value.compareTo((other as I32).value)
+            }
+
+            is I64 -> {
+                value.compareTo((other as I64).value)
+            }
+
+            is I128 -> {
+                value.compareTo((other as I128).value)
+            }
+
+            is F32 -> {
+                f64TotalCmp(value.toDouble(), (other as F32).value.toDouble())
+            }
+
+            is F64 -> {
+                f64TotalCmp(value, (other as F64).value)
+            }
+
+            is Char -> {
+                value.compareTo((other as Char).value)
+            }
+
+            is Str -> {
+                value.compareTo((other as Str).value)
+            }
+
+            is Bytes -> {
+                compareBytes(value, (other as Bytes).value)
+            }
+
+            None -> {
+                0
+            }
+
+            is Some -> {
+                value.compareTo((other as Some).value)
+            }
+
+            UnitValue -> {
+                0
+            }
+
+            is UnitStruct -> {
+                name.compareTo((other as UnitStruct).name)
+            }
+
+            is UnitVariant -> {
+                val o = other as UnitVariant
+                var c = name.compareTo(o.name)
+                if (c != 0) return c
+                c = index.compareTo(o.index)
+                if (c != 0) return c
+                variant.compareTo(o.variant)
+            }
+
+            is NewtypeStruct -> {
+                val o = other as NewtypeStruct
+                val c = name.compareTo(o.name)
+                if (c != 0) return c
+                value.compareTo(o.value)
+            }
+
+            is NewtypeVariant -> {
+                val o = other as NewtypeVariant
+                var c = name.compareTo(o.name)
+                if (c != 0) return c
+                c = index.compareTo(o.index)
+                if (c != 0) return c
+                c = variant.compareTo(o.variant)
+                if (c != 0) return c
+                value.compareTo(o.value)
+            }
+
+            is Seq -> {
+                compareList(value, (other as Seq).value)
+            }
+
+            is Tuple -> {
+                compareList(value, (other as Tuple).value)
+            }
+
+            is TupleStruct -> {
+                val o = other as TupleStruct
+                val c = name.compareTo(o.name)
+                if (c != 0) return c
+                compareList(value, o.value)
+            }
+
+            is TupleVariant -> {
+                val o = other as TupleVariant
+                var c = name.compareTo(o.name)
+                if (c != 0) return c
+                c = index.compareTo(o.index)
+                if (c != 0) return c
+                c = variant.compareTo(o.variant)
+                if (c != 0) return c
+                compareList(value, o.value)
+            }
+
+            is Map -> {
+                compareEntries(value, (other as Map).value)
+            }
+
+            is Struct -> {
+                val o = other as Struct
+                val c = name.compareTo(o.name)
+                if (c != 0) return c
+                compareFields(fields, o.fields)
+            }
+
+            is StructVariant -> {
+                val o = other as StructVariant
+                var c = name.compareTo(o.name)
+                if (c != 0) return c
+                c = index.compareTo(o.index)
+                if (c != 0) return c
+                c = variant.compareTo(o.variant)
+                if (c != 0) return c
+                compareFields(fields, o.fields)
+            }
+        }
+    }
+
+    override fun <Ok> serialize(serializer: Serializer<Ok>): SerdeResult<Ok> =
+        when (this) {
+            is Bool -> {
+                serializer.serializeBool(value)
+            }
+
+            is U8 -> {
+                serializer.serializeU8(value)
+            }
+
+            is U16 -> {
+                serializer.serializeU16(value)
+            }
+
+            is U32 -> {
+                serializer.serializeU32(value)
+            }
+
+            is U64 -> {
+                serializer.serializeU64(value)
+            }
+
+            is U128 -> {
+                serializer.serializeU128(value.toString())
+            }
+
+            is I8 -> {
+                serializer.serializeI8(value)
+            }
+
+            is I16 -> {
+                serializer.serializeI16(value)
+            }
+
+            is I32 -> {
+                serializer.serializeI32(value)
+            }
+
+            is I64 -> {
+                serializer.serializeI64(value)
+            }
+
+            is I128 -> {
+                serializer.serializeI128(value.toString())
+            }
+
+            is F32 -> {
+                serializer.serializeF32(value)
+            }
+
+            is F64 -> {
+                serializer.serializeF64(value)
+            }
+
+            is Char -> {
+                serializer.serializeChar(value)
+            }
+
+            is Str -> {
+                serializer.serializeStr(value)
+            }
+
+            is Bytes -> {
+                serializer.serializeBytes(value.toByteArray())
+            }
+
+            None -> {
+                serializer.serializeNone()
+            }
+
+            is Some -> {
+                serializer.serializeSome(value)
+            }
+
+            UnitValue -> {
+                serializer.serializeUnit()
+            }
+
+            is UnitStruct -> {
+                serializer.serializeUnitStruct(name)
+            }
+
+            is UnitVariant -> {
+                serializer.serializeUnitVariant(name, index, variant)
+            }
+
+            is NewtypeStruct -> {
+                serializer.serializeNewtypeStruct(name, value)
+            }
+
+            is NewtypeVariant -> {
+                serializer.serializeNewtypeVariant(name, index, variant, value)
+            }
+
+            is Seq -> {
+                serdeCatching {
+                    val seq = serializer.serializeSeq(value.size).getOrThrow()
+                    for (element in value) {
+                        seq.serializeElement(element).getOrThrow()
+                    }
+                    seq.end().getOrThrow()
+                }
+            }
+
+            is Tuple -> {
+                serdeCatching {
+                    val tuple = serializer.serializeTuple(value.size).getOrThrow()
+                    for (element in value) {
+                        tuple.serializeElement(element).getOrThrow()
+                    }
+                    tuple.end().getOrThrow()
+                }
+            }
+
+            is TupleStruct -> {
+                serdeCatching {
+                    val ts = serializer.serializeTupleStruct(name, value.size).getOrThrow()
+                    for (field in value) {
+                        ts.serializeField(field).getOrThrow()
+                    }
+                    ts.end().getOrThrow()
+                }
+            }
+
+            is TupleVariant -> {
+                serdeCatching {
+                    val tv = serializer.serializeTupleVariant(name, index, variant, value.size).getOrThrow()
+                    for (field in value) {
+                        tv.serializeField(field).getOrThrow()
+                    }
+                    tv.end().getOrThrow()
+                }
+            }
+
+            is Map -> {
+                serdeCatching {
+                    val map = serializer.serializeMap(value.size).getOrThrow()
+                    for (entry in value) {
+                        map.serializeEntry(entry.key, entry.value).getOrThrow()
+                    }
+                    map.end().getOrThrow()
+                }
+            }
+
+            is Struct -> {
+                serdeCatching {
+                    val s = serializer.serializeStruct(name, fields.size).getOrThrow()
+                    for (field in fields) {
+                        s.serializeField(field.name, field.value).getOrThrow()
+                    }
+                    s.end().getOrThrow()
+                }
+            }
+
+            is StructVariant -> {
+                serdeCatching {
+                    val sv = serializer.serializeStructVariant(name, index, variant, fields.size).getOrThrow()
+                    for (field in fields) {
+                        sv.serializeField(field.name, field.value).getOrThrow()
+                    }
+                    sv.end().getOrThrow()
+                }
+            }
+        }
+
     companion object {
         fun from(value: Boolean): Content = Bool(value)
 
@@ -635,4 +1025,44 @@ private fun kotlin.String.trimLeadingZeroes(): kotlin.String =
 private fun kotlin.String.hasGreaterMagnitudeThan(limit: kotlin.String): Boolean {
     val normalized = trimLeadingZeroes()
     return normalized.length > limit.length || (normalized.length == limit.length && normalized > limit)
+}
+
+private fun compareBytes(a: List<Byte>, b: List<Byte>): Int {
+    val minLen = minOf(a.size, b.size)
+    for (i in 0 until minLen) {
+        val cmp = a[i].toUByte().compareTo(b[i].toUByte())
+        if (cmp != 0) return cmp
+    }
+    return a.size.compareTo(b.size)
+}
+
+private fun compareList(a: List<Content>, b: List<Content>): Int {
+    val minLen = minOf(a.size, b.size)
+    for (i in 0 until minLen) {
+        val cmp = a[i].compareTo(b[i])
+        if (cmp != 0) return cmp
+    }
+    return a.size.compareTo(b.size)
+}
+
+private fun compareEntries(a: List<Content.Entry>, b: List<Content.Entry>): Int {
+    val minLen = minOf(a.size, b.size)
+    for (i in 0 until minLen) {
+        val kCmp = a[i].key.compareTo(b[i].key)
+        if (kCmp != 0) return kCmp
+        val vCmp = a[i].value.compareTo(b[i].value)
+        if (vCmp != 0) return vCmp
+    }
+    return a.size.compareTo(b.size)
+}
+
+private fun compareFields(a: List<Content.Field>, b: List<Content.Field>): Int {
+    val minLen = minOf(a.size, b.size)
+    for (i in 0 until minLen) {
+        val nCmp = a[i].name.compareTo(b[i].name)
+        if (nCmp != 0) return nCmp
+        val vCmp = a[i].value.compareTo(b[i].value)
+        if (vCmp != 0) return vCmp
+    }
+    return a.size.compareTo(b.size)
 }
